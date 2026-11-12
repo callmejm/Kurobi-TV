@@ -55,3 +55,8 @@ android/build/reports/problems/
 **/macos/Pods/
 **/ios/Podfile.lock
 **/macos/Podfile.lock
+
+# Signing keys: never commit
+key.properties
+*.jks
+*.keystore
