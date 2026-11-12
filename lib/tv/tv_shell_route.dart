@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:kazumi/services/platform/app_exit.dart';
+import 'package:kazumi/tv/tv_routes.dart';
 import 'package:kazumi/tv/tv_shell.dart';
 
 /// Hosts [TvShell] and switches destinations inside its own [RouterOutlet],
@@ -21,6 +22,10 @@ class _TvShellRouteState extends State<TvShellRoute> {
   late String _location = widget.location;
 
   void _navigate(String path) {
+    if (path == TvRoutes.settings) {
+      context.pushNamed(path);
+      return;
+    }
     _outletKey.currentState?.navigate(path);
     setState(() => _location = path);
   }

@@ -10,4 +10,7 @@ class TvRoutes {
   static const rules = '/tv/rules';
   static const info = '/tv/info';
   static const video = '/tv/video';
+
+  /// The phone settings pages, pushed over the shell.
+  static const settings = '/settings/';
 }

@@ -19,6 +19,7 @@ import 'package:kazumi/tv/pages/tv_timeline_page.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
 import 'package:kazumi/pages/route_error_page.dart';
+import 'package:kazumi/pages/settings/settings_module.dart';
 import 'package:kazumi/pages/player/player_controller.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/video/video_playback_args.dart';
@@ -96,6 +97,8 @@ final tvModule = createModule(
         transition: TransitionType.none,
       )
       ..module(tvShellModule)
+      // Phone settings pages; their Material controls take D-pad focus.
+      ..module(settingsModule)
       ..route(
         TvRoutes.video,
         provide: (s) => s

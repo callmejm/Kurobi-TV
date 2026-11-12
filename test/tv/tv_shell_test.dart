@@ -117,6 +117,7 @@ void main() {
       LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowRight,
       LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.arrowRight,
     ]) {
       await tester.sendKeyEvent(key);
       await tester.pumpAndSettle();
@@ -129,7 +130,8 @@ void main() {
       'nav 收藏',
       'nav 历史',
       'nav 规则',
-      'nav 规则',
+      'nav 设置',
+      'nav 设置',
     ]);
   });
 

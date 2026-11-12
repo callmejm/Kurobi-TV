@@ -59,6 +59,88 @@ void main() {
     expect(_hasRing(tester), isTrue);
   });
 
+  testWidgets('a rebuilt TvFocusable shows the ring of its focused node', (
+    tester,
+  ) async {
+    final node = FocusNode();
+    Widget build(String key) => _host(
+      TvFocusable(
+        key: ValueKey(key),
+        focusNode: node,
+        onSelect: () {},
+        child: const SizedBox(width: 100, height: 100),
+      ),
+    );
+    await tester.pumpWidget(build('a'));
+    node.requestFocus();
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build('b'));
+    node.requestFocus();
+    await tester.pumpAndSettle();
+    expect(node.hasFocus, isTrue);
+    expect(_hasRing(tester), isTrue);
+  });
+
+  testWidgets('an arrow on a page with nothing focused focuses a control', (
+    tester,
+  ) async {
+    final button = FocusNode();
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => TvFocusRescue(child: child!),
+        home: Scaffold(
+          body: TextButton(
+            focusNode: button,
+            onPressed: () {},
+            child: const Text('ok'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(FocusManager.instance.primaryFocus, isA<FocusScopeNode>());
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    expect(button.hasPrimaryFocus, isTrue);
+  });
+
+  testWidgets('left from a nested scope reaches the control beside it', (
+    tester,
+  ) async {
+    final rail = FocusNode();
+    final pane = FocusNode();
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => TvFocusRescue(child: child!),
+        home: Scaffold(
+          body: Row(
+            children: [
+              TextButton(
+                focusNode: rail,
+                onPressed: () {},
+                child: const Text('rail'),
+              ),
+              // Like the settings pane: its own navigator, so its own scope.
+              FocusScope(
+                child: TextButton(
+                  focusNode: pane,
+                  autofocus: true,
+                  onPressed: () {},
+                  child: const Text('pane'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(pane.hasPrimaryFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(rail.hasPrimaryFocus, isTrue);
+  });
+
   testWidgets('arrow right moves focus to the next card in a row', (
     tester,
   ) async {
@@ -108,6 +190,32 @@ void main() {
     // 530 wide minus the 10 left inset fits 4 cards of 120; the 5th would be
     // cut. The row ends where the 5th card would start.
     expect(tester.getSize(find.byType(ListView)).width, 4 * 120 + 10);
+  });
+
+  testWidgets('up from a card reaches the button beside the row title', (
+    tester,
+  ) async {
+    final button = FocusNode();
+    await tester.pumpWidget(
+      _host(
+        TvRow<String>(
+          title: 'row',
+          items: const ['a', 'b'],
+          itemExtent: 120,
+          height: 120,
+          trailing: TvButton(label: '分类', focusNode: button, onSelect: () {}),
+          itemBuilder: (context, item, index) => TvFocusable(
+            autofocus: index == 0,
+            onSelect: () {},
+            child: Text(item),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.pump();
+    expect(button.hasFocus, isTrue);
   });
 
   testWidgets('removing the focused item moves focus to a sibling', (

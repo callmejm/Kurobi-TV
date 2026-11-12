@@ -19,6 +19,7 @@ const tvDestinations = [
   TvDestination('收藏', null, TvRoutes.collect),
   TvDestination('历史', null, TvRoutes.history),
   TvDestination('规则', null, TvRoutes.rules),
+  TvDestination('设置', Icons.settings_rounded, TvRoutes.settings),
 ];
 
 /// Top navigation bar floating over full-bleed page content.

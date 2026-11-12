@@ -73,10 +73,10 @@ ThemeData buildTvTheme({Color seed = Colors.green}) {
       bodyColor: TvTokens.text,
       displayColor: TvTokens.text,
     ),
-    // Remote focus is drawn by TvFocusable; Material ink highlights would
-    // double it.
+    // TV widgets draw remote focus with TvFocusable and use no ink, so the
+    // focus color only shows on Material pages reused as-is (settings).
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
-    focusColor: Colors.transparent,
+    focusColor: const Color(0x52FFFFFF),
   );
 }

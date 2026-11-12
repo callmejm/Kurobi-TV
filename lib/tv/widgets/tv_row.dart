@@ -20,7 +20,11 @@ class TvRow<T> extends StatefulWidget {
     this.height = TvTokens.posterHeight + 88,
     this.onIndexFocused,
     this.initialIndex = 0,
+    this.trailing,
   });
+
+  /// Shown after the title, e.g. buttons acting on the row.
+  final Widget? trailing;
 
   /// Item scrolled into view when the row first builds (e.g. the playing episode).
   final int initialIndex;
@@ -105,9 +109,14 @@ class _TvRowState<T> extends State<TvRow<T>> {
       children: [
         Padding(
           padding: EdgeInsets.only(left: _inset.left),
-          child: Text(
-            widget.title,
-            style: Theme.of(context).textTheme.titleLarge,
+          child: Row(
+            children: [
+              Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
+              if (widget.trailing != null) ...[
+                const SizedBox(width: 16),
+                widget.trailing!,
+              ],
+            ],
           ),
         ),
         // Trim the row to a whole number of cards so the last one is never cut.
