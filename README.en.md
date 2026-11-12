@@ -13,7 +13,9 @@
 
 ## Screen recording
 
-<p align="center"><video src="static/screenshot-tv/home-nav.mp4" controls muted width="640"></video></p>
+<p align="center"><img alt="Screen recording" src="static/screenshot-tv/home-nav.gif" width="640"></p>
+
+<p align="center"><a href="static/screenshot-tv/home-nav.mp4">Watch the MP4 version (sharper)</a></p>
 
 ## Screenshots
 
