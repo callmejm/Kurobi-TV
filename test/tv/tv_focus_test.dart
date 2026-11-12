@@ -88,6 +88,28 @@ void main() {
     expect(nodes['b']!.hasFocus, isTrue);
   });
 
+  testWidgets('a row shows only whole cards, never a cut-off one', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        SizedBox(
+          width: 530,
+          child: TvRow<int>(
+            title: 'row',
+            items: List.generate(10, (i) => i),
+            itemExtent: 120,
+            height: 120,
+            itemBuilder: (context, item, index) => Text('$item'),
+          ),
+        ),
+      ),
+    );
+    // 530 wide minus the 10 left inset fits 4 cards of 120; the 5th would be
+    // cut. The row ends where the 5th card would start.
+    expect(tester.getSize(find.byType(ListView)).width, 4 * 120 + 10);
+  });
+
   testWidgets('removing the focused item moves focus to a sibling', (
     tester,
   ) async {

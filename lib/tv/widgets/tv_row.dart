@@ -110,33 +110,41 @@ class _TvRowState<T> extends State<TvRow<T>> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
-        SizedBox(
-          height: widget.height,
-          child: FocusTraversalGroup(
-            child: ListView.builder(
-              controller: _scroll,
-              padding: _inset,
-              scrollDirection: Axis.horizontal,
-              itemExtent: widget.itemExtent,
-              itemCount: widget.items.length,
-              itemBuilder: (context, index) => Focus(
-                focusNode: _nodeFor(index),
-                onFocusChange: (focused) {
-                  if (focused) _onItemFocused(index);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(right: TvTokens.posterGap),
-                  child: widget.itemBuilder(
-                    context,
-                    widget.items[index],
-                    index,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        // Trim the row to a whole number of cards so the last one is never cut.
+        // The right inset is left out: scrolled, it would show the next card.
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final fit =
+                ((constraints.maxWidth - _inset.left) ~/ widget.itemExtent)
+                    .clamp(1, 1 << 20);
+            return SizedBox(
+              height: widget.height,
+              width: fit * widget.itemExtent + _inset.left,
+              child: _list(),
+            );
+          },
         ),
       ],
     );
   }
+
+  Widget _list() => FocusTraversalGroup(
+    child: ListView.builder(
+      controller: _scroll,
+      padding: _inset,
+      scrollDirection: Axis.horizontal,
+      itemExtent: widget.itemExtent,
+      itemCount: widget.items.length,
+      itemBuilder: (context, index) => Focus(
+        focusNode: _nodeFor(index),
+        onFocusChange: (focused) {
+          if (focused) _onItemFocused(index);
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(right: TvTokens.posterGap),
+          child: widget.itemBuilder(context, widget.items[index], index),
+        ),
+      ),
+    ),
+  );
 }
