@@ -107,35 +107,7 @@ class _TvInfoPageState extends State<TvInfoPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TvBangumiHeadline(item: item, titleLines: 2, summaryLines: 4),
-                  const SizedBox(height: 16),
-                  // Tags, like the phone detail page; OK searches the tag.
-                  // One scrolling line, so long tag lists never push the
-                  // buttons off screen.
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    // Room for the focus scale inside the clip.
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 4,
-                    ),
-                    child: Row(
-                      children: [
-                        for (final tag in item.tags.where(
-                          (t) => tvShowNsfw.value || !isNsfwTag(t.name),
-                        )) ...[
-                          TvButton(
-                            label: '${tag.name} ${tag.count}',
-                            onSelect: () => context.pushNamed(
-                              TvRoutes.tagSearch,
-                              arguments: tag.name,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
+                  const SizedBox(height: 24),
                   Row(
                     children: [
                       TvButton(
@@ -154,6 +126,31 @@ class _TvInfoPageState extends State<TvInfoPage> {
                         onSelect: _cycleCollect,
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Tags below the actions, quieter than them; OK searches
+                  // the tag. Scrolls when there are more than fit.
+                  Expanded(
+                    child: SingleChildScrollView(
+                      // Room for the focus scale inside the clip.
+                      padding: const EdgeInsets.all(4),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final tag in item.tags.where(
+                            (t) => tvShowNsfw.value || !isNsfwTag(t.name),
+                          ))
+                            TvButton(
+                              label: '${tag.name} ${tag.count}',
+                              onSelect: () => context.pushNamed(
+                                TvRoutes.tagSearch,
+                                arguments: tag.name,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
