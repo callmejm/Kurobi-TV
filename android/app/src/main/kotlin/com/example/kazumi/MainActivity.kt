@@ -1,6 +1,7 @@
 package com.example.kazumi
 
 import android.app.PendingIntent
+import android.app.UiModeManager
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.BroadcastReceiver
@@ -33,6 +34,7 @@ import com.ryanheise.audioservice.AudioServiceActivity
 class MainActivity: AudioServiceActivity() {
     private val CHANNEL = "com.predidit.kazumi/intent"
     private val STORAGE_CHANNEL = "com.predidit.kazumi/storage"
+    private val TV_CHANNEL = "com.predidit.kazumi/tv"
     private val PIP_CHANNEL = "com.predidit.kazumi/pip"
     private var intentChannel: MethodChannel? = null
     private var pipChannel: MethodChannel? = null
@@ -130,6 +132,18 @@ class MainActivity: AudioServiceActivity() {
                 systemBarsHidden = call.arguments as? Boolean ?: false
                 applySystemBarsState()
                 result.success(null)
+            } else {
+                result.notImplemented()
+            }
+        }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, TV_CHANNEL).setMethodCallHandler { call, result ->
+            if (call.method == "isTelevision") {
+                val uiMode = getSystemService(UI_MODE_SERVICE) as UiModeManager
+                result.success(
+                    uiMode.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION ||
+                        packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+                )
             } else {
                 result.notImplemented()
             }
