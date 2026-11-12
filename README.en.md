@@ -1,12 +1,14 @@
 <div align=center>
 
-<h1>Kazumi-TV</h1>
+<h1>Kurobi-TV</h1>
+
+<img src="assets/images/logo/logo_rounded.png" width=200></img>
 
 <p><b>Unofficial Android TV edition of <a href="https://github.com/Predidit/Kazumi">Kazumi</a></b></p>
 
 <p>English | <a href="README.md">简体中文</a></p>
 
-<p>Kazumi-TV is a fork of Kazumi with a UI and player redesigned for TVs and remotes (D-pad). Rules (XPath), video-source resolving, collections and history come from upstream.</p>
+<p>Kurobi-TV is a fork of Kazumi with a UI and player redesigned for TVs and remotes (D-pad). Rules (XPath), video-source resolving, collections and history come from upstream.</p>
 </div>
 
 > This is **not** an official Kazumi release. Bugs in the TV UI belong in this repository, not upstream.
@@ -24,6 +26,10 @@ https://github.com/user-attachments/assets/41f03fb9-05ef-44e4-869a-760c35d71cef
   </tr>
   <tr>
     <td><img alt="Detail" src="static/screenshot-tv/detail.jpg"></td>
+    <td><img alt="Source picker" src="static/screenshot-tv/source-picker.jpg"></td>
+  </tr>
+  <tr>
+    <td><img alt="Episode picker" src="static/screenshot-tv/episodes.jpg"></td>
     <td><img alt="Timeline" src="static/screenshot-tv/timeline.jpg"></td>
   </tr>
   <tr>
@@ -63,13 +69,13 @@ XPath-based rules and rule import, multi-source playback, hardware decoding thro
 
 ## Install
 
-1. Download the APK from [Releases](https://github.com/callmejm/Kazumi-TV/releases/latest).
+1. Download the APK from [Releases](https://github.com/callmejm/Kurobi-TV/releases/latest).
 2. Copy it to the TV (USB drive, `adb install`, or a file manager app).
-3. Allow installs from unknown sources and open **Kazumi-TV** from the launcher.
+3. Allow installs from unknown sources and open **Kurobi-TV** from the launcher.
 
 ```bash
 adb connect <tv-ip>:5555
-adb install Kazumi-TV.apk
+adb install Kurobi-TV.apk
 ```
 
 First launch has no rules. Import rules from [KazumiRules](https://github.com/Predidit/KazumiRules) or the rules page.
@@ -92,5 +98,7 @@ TV code lives in `lib/tv/`. The phone UI in `lib/pages/` is unchanged. `TvEnviro
 The TV code in this fork was written with AI assistance: **Claude Opus 5.5** (Anthropic), through Claude Code. The author reviewed and tested the changes.
 
 ## Credits and disclaimer
+
+The app icon and the owl mascot belong to this project. Upstream Kazumi's icon, which is not free to reuse, is not used.
 
 Built on [Kazumi](https://github.com/Predidit/Kazumi) by Predidit and its [contributors](https://github.com/Predidit/Kazumi/graphs/contributors). Upstream credits apply here too. Licensed under GPL-3.0 without any warranty. Follow your local laws and do not infringe third-party rights. Clear data and caches created by use within 24 hours unless you hold authorization from the rights holders. No user data is collected and no telemetry is used.

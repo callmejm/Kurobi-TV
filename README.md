@@ -1,6 +1,8 @@
 <div align=center>
 
-<h1>Kazumi-TV</h1>
+<h1>Kurobi-TV</h1>
+
+<img src="assets/images/logo/logo_rounded.png" width=200></img>
 
 <p><b>非官方的 <a href="https://github.com/Predidit/Kazumi">Kazumi</a> Android TV 版本</b></p>
 
@@ -10,7 +12,7 @@
 <img src="https://img.shields.io/badge/Flutter-03A9F4?style=for-the-badge&logo=flutter&logoColor=white"></img>
 <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge"></img>
 
-<p>Kazumi-TV 是基于 Kazumi 的分支, 为电视和遥控器 (D-pad) 重新设计了界面与播放器。规则 (Xpath)、视频源解析、追番、历史记录等核心能力沿用上游 Kazumi。</p>
+<p>Kurobi-TV 是基于 Kazumi 的分支, 为电视和遥控器 (D-pad) 重新设计了界面与播放器。规则 (Xpath)、视频源解析、追番、历史记录等核心能力沿用上游 Kazumi。</p>
 </div>
 
 > 这**不是** Kazumi 官方发布版本。电视端界面的问题请在本仓库反馈, 不要打扰上游。
@@ -28,6 +30,10 @@ https://github.com/user-attachments/assets/41f03fb9-05ef-44e4-869a-760c35d71cef
   </tr>
   <tr>
     <td><img alt="详情页" src="static/screenshot-tv/detail.jpg"></td>
+    <td><img alt="选择播放源" src="static/screenshot-tv/source-picker.jpg"></td>
+  </tr>
+  <tr>
+    <td><img alt="选择剧集" src="static/screenshot-tv/episodes.jpg"></td>
     <td><img alt="时间表" src="static/screenshot-tv/timeline.jpg"></td>
   </tr>
   <tr>
@@ -68,13 +74,13 @@ https://github.com/user-attachments/assets/41f03fb9-05ef-44e4-869a-760c35d71cef
 
 ## 下载与安装
 
-1. 从 [Releases](https://github.com/callmejm/Kazumi-TV/releases/latest) 下载 APK。<!-- TODO: 目前还没有发布版本 -->
+1. 从 [Releases](https://github.com/callmejm/Kurobi-TV/releases/latest) 下载 APK。<!-- TODO: 目前还没有发布版本 -->
 2. 通过 U 盘、`adb install` 或文件管理器应用把 APK 放到电视上。
-3. 允许安装未知来源应用, 然后在启动器中打开 **Kazumi-TV**。
+3. 允许安装未知来源应用, 然后在启动器中打开 **Kurobi-TV**。
 
 ```bash
 adb connect <电视IP>:5555
-adb install Kazumi-TV.apk
+adb install Kurobi-TV.apk
 ```
 
 首次启动时没有任何规则。请从 [KazumiRules](https://github.com/Predidit/KazumiRules) 仓库或规则页面导入规则。
@@ -102,9 +108,9 @@ API 密钥通过 `--dart-define=KAZUMI_APPID=... KAZUMI_KEY=...` (以及 `DANDAN
 
 ## 致谢
 
-Kazumi-TV 基于 Predidit 及其 [贡献者](https://github.com/Predidit/Kazumi/graphs/contributors) 开发的 [Kazumi](https://github.com/Predidit/Kazumi)。上游的致谢同样适用于本项目: XpathSelector、弹弹play、Bangumi、Anime4K、SyncPlay、trace.moe、media-kit、avbuild、hive。
+Kurobi-TV 基于 Predidit 及其 [贡献者](https://github.com/Predidit/Kazumi/graphs/contributors) 开发的 [Kazumi](https://github.com/Predidit/Kazumi)。上游的致谢同样适用于本项目: XpathSelector、弹弹play、Bangumi、Anime4K、SyncPlay、trace.moe、media-kit、avbuild、hive。
 
-Kazumi 的应用图标版权属于其原作者, 不可自由使用。<!-- TODO: 首次发布前请替换启动图标与电视横幅图, 或取得原作者授权 -->
+本项目的应用图标和猫头鹰吉祥物为项目自有, 不使用上游 Kazumi 的图标 (其版权属于原作者, 不可自由使用)。
 
 ## 免责声明
 
