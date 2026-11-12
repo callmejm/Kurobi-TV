@@ -19,6 +19,10 @@ import 'package:kazumi/tv/pages/tv_timeline_page.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
 import 'package:kazumi/pages/route_error_page.dart';
+import 'package:kazumi/pages/player/player_controller.dart';
+import 'package:kazumi/pages/video/video_controller.dart';
+import 'package:kazumi/pages/video/video_playback_args.dart';
+import 'package:kazumi/tv/player/tv_player_page.dart';
 import 'package:kazumi/tv/pages/tv_info_page.dart';
 import 'package:kazumi/tv/pages/tv_rules_page.dart';
 import 'package:kazumi/tv/tv_routes.dart';
@@ -94,6 +98,24 @@ final tvModule = createModule(
         transition: TransitionType.none,
       )
       ..module(tvShellModule)
+      ..route(
+        TvRoutes.video,
+        provide: (s) => s
+          ..add<VideoPageController>(VideoPageController.new)
+          ..add<PlayerController>(PlayerController.new),
+        child: (context, state) {
+          final args = state.arguments;
+          if (args is! VideoPlaybackArgs) {
+            return const RouteErrorPage(message: '播放参数无效，请返回后重试。');
+          }
+          return TvPlayerPage(
+            args: args,
+            playerController: context.read<PlayerController>(),
+            videoPageController: context.read<VideoPageController>(),
+            historyController: inject<HistoryController>(),
+          );
+        },
+      )
       ..route(
         TvRoutes.info,
         provide: (s) => s.add<InfoController>(InfoController.new),
