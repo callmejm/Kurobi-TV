@@ -17,9 +17,7 @@
 
 > 这**不是** Kazumi 官方发布版本。电视端界面的问题请在本仓库反馈, 不要打扰上游。
 
-## 屏幕录影
-
-https://github.com/user-attachments/assets/41f03fb9-05ef-44e4-869a-760c35d71cef
+<!-- TODO: 上传新的 static/screenshot-tv/home-nav.mp4 后, 把 user-attachments 链接放回 "屏幕录影" 小节 -->
 
 ## 屏幕截图
 

@@ -13,9 +13,7 @@
 
 > This is **not** an official Kazumi release. Bugs in the TV UI belong in this repository, not upstream.
 
-## Screen recording
-
-https://github.com/user-attachments/assets/41f03fb9-05ef-44e4-869a-760c35d71cef
+<!-- TODO: after uploading the new static/screenshot-tv/home-nav.mp4, restore the "Screen recording" section with its user-attachments URL -->
 
 ## Screenshots
 
