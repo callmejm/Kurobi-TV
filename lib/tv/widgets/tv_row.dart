@@ -13,7 +13,11 @@ class TvRow<T> extends StatefulWidget {
     required this.itemBuilder,
     this.itemExtent = 200,
     this.height = 300,
+    this.onIndexFocused,
   });
+
+  /// Called with the item index whenever an item gains focus (for paging).
+  final void Function(int index)? onIndexFocused;
 
   final String title;
   final List<T> items;
@@ -81,7 +85,9 @@ class _TvRowState<T> extends State<TvRow<T>> {
               itemBuilder: (context, index) => Focus(
                 focusNode: _nodeFor(index),
                 onFocusChange: (focused) {
-                  if (focused) _lastIndex = index;
+                  if (!focused) return;
+                  _lastIndex = index;
+                  widget.onIndexFocused?.call(index);
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
