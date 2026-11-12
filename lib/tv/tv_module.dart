@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:kazumi/core_module.dart';
 import 'package:kazumi/pages/download/download_controller.dart';
@@ -17,9 +16,13 @@ import 'package:kazumi/tv/pages/tv_home_page.dart';
 import 'package:kazumi/tv/pages/tv_init_page.dart';
 import 'package:kazumi/tv/pages/tv_search_page.dart';
 import 'package:kazumi/tv/pages/tv_timeline_page.dart';
+import 'package:kazumi/modules/bangumi/bangumi_item.dart';
+import 'package:kazumi/pages/info/info_controller.dart';
+import 'package:kazumi/pages/route_error_page.dart';
+import 'package:kazumi/tv/pages/tv_info_page.dart';
+import 'package:kazumi/tv/pages/tv_rules_page.dart';
+import 'package:kazumi/tv/tv_routes.dart';
 import 'package:kazumi/tv/tv_shell.dart';
-
-Widget _placeholder(String label) => Center(child: Text(label));
 
 /// Shell with the navigation rail; destination pages render in its outlet.
 final tvShellModule = createModule(
@@ -66,7 +69,11 @@ final tvShellModule = createModule(
                 controller: context.read<SearchPageController>(),
               ),
             )
-            ..route('/rules', child: (context, state) => _placeholder('规则'));
+            ..route(
+              '/rules',
+              child: (context, state) =>
+                  TvRulesPage(controller: inject<PluginsController>()),
+            );
         },
       );
   },
@@ -86,7 +93,23 @@ final tvModule = createModule(
         ),
         transition: TransitionType.none,
       )
-      ..module(tvShellModule);
+      ..module(tvShellModule)
+      ..route(
+        TvRoutes.info,
+        provide: (s) => s.add<InfoController>(InfoController.new),
+        child: (context, state) {
+          final item = state.arguments;
+          if (item is! BangumiItem) {
+            return const RouteErrorPage(message: '番剧参数无效，请返回后重试。');
+          }
+          return TvInfoPage(
+            bangumiItem: item,
+            infoController: context.read<InfoController>(),
+            pluginsController: inject<PluginsController>(),
+            collectController: inject<CollectController>(),
+          );
+        },
+      );
   },
 );
 
