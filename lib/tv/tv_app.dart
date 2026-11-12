@@ -27,7 +27,7 @@ class TvApp extends StatelessWidget {
       countryCode: 'CN',
     );
     return MaterialApp.router(
-      title: 'Kazumi',
+      title: 'Kurobi-TV',
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: const [locale],
       locale: locale,

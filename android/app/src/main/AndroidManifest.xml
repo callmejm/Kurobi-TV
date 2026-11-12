@@ -3,7 +3,7 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <application
         android:banner="@drawable/tv_banner"
-        android:label="Kazumi-TV"
+        android:label="Kurobi-TV"
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"

@@ -140,11 +140,11 @@ class _TvShellState extends State<TvShell> {
               onKeyEvent: _onNavKey,
               child: Row(
                 children: [
-                  Text(
-                    'Kazumi',
-                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
+                  Semantics(
+                    label: 'Kurobi-TV',
+                    child: Image.asset(
+                      'assets/images/kurobi_mark.png',
+                      height: 56,
                     ),
                   ),
                   const SizedBox(width: 28),

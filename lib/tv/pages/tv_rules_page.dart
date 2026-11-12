@@ -52,7 +52,7 @@ class _TvRulesPageState extends State<TvRulesPage> {
       text = switch (await _c.tryUpdatePluginByName(name)) {
         PluginUpdateResult.updated => '完成',
         PluginUpdateResult.notNewer => '已是最新',
-        PluginUpdateResult.requiresNewerClient => '需要更新 Kazumi',
+        PluginUpdateResult.requiresNewerClient => '需要更新应用',
         PluginUpdateResult.failed => '失败，按确认键重试',
       };
     } catch (_) {

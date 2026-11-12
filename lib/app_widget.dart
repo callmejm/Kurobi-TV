@@ -282,7 +282,7 @@ class _AppWidgetState extends State<AppWidget>
             : dynamicDarkTheme;
 
         return MaterialApp.router(
-          title: "Kazumi",
+          title: "Kurobi-TV",
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
           supportedLocales: const [
             Locale.fromSubtags(
