@@ -70,7 +70,7 @@ https://github.com/user-attachments/assets/2ebf84c7-542c-491f-9321-fdaf5d7a0362
 - TV 端暂不支持弹幕。播放器目前使用一个不绘制任何内容的弹幕控制器。
 - **缺少 `KAZUMI_APPID` 和 `KAZUMI_KEY`。** 这两个密钥属于上游维护者, 不对外提供, 本项目的构建中为空。没有它们时, 需要签名的 Bangumi 镜像接口 (搜索、评论) 会改为直接请求官方 Bangumi API, 在部分网络环境下搜索可能较慢或不可用。`DANDANAPI_APPID` 和 `DANDANAPI_KEY` (弹弹play) 同样没有, 所以弹幕不可用。
 - 仅面向 Android TV。手机、桌面等其他平台请使用 [上游 Kazumi](https://github.com/Predidit/Kazumi)。
-- <!-- TODO: 补充已测试的设备与模拟器 -->
+- 已测试: Android TV 模拟器 (1920x1080) 和一台小米电视 (MiTV_MZTU0, Android 14, 32 位 ARM)。其他设备没有测试, 可能有问题。
 
 ## 下载与安装
 

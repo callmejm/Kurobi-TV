@@ -66,6 +66,7 @@ XPath-based rules and rule import, multi-source playback, hardware decoding thro
 - No danmaku on TV yet.
 - **`KAZUMI_APPID` and `KAZUMI_KEY` are missing.** These keys belong to the upstream maintainer and are not shared, so they are empty in this project's builds. Without them, the signed Bangumi mirror endpoints (search, comments) fall back to the official Bangumi API, which can be slow or blocked on some networks. `DANDANAPI_APPID` and `DANDANAPI_KEY` (dandanplay) are missing too, so danmaku is unavailable.
 - Android TV only. For phones, desktop and other platforms use [upstream Kazumi](https://github.com/Predidit/Kazumi).
+- Tested on an Android TV emulator (1920x1080) and one Xiaomi TV (MiTV_MZTU0, Android 14, 32-bit ARM). Other devices are untested and may have problems.
 
 ## Install
 
