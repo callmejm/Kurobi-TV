@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:kazumi/services/platform/app_exit.dart';
 import 'package:kazumi/tv/tv_shell.dart';
 
 /// Hosts [TvShell] and switches destinations inside its own [RouterOutlet],
@@ -29,6 +30,8 @@ class _TvShellRouteState extends State<TvShellRoute> {
     return TvShell(
       location: _location,
       onNavigate: _navigate,
+      // End the process: the audio service would otherwise keep it alive.
+      onExit: AppExit.quit,
       child: RouterOutlet(key: _outletKey),
     );
   }

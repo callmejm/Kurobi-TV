@@ -102,12 +102,16 @@ final tvModule = createModule(
           ..add<VideoPageController>(VideoPageController.new)
           ..add<PlayerController>(PlayerController.new),
         child: (context, state) {
-          final args = state.arguments;
+          final data = state.arguments;
+          final request = data is TvPlaybackRequest ? data : null;
+          final args = request?.args ?? data;
           if (args is! VideoPlaybackArgs) {
             return const RouteErrorPage(message: '播放参数无效，请返回后重试。');
           }
           return TvPlayerPage(
             args: args,
+            startEpisode: request?.episode,
+            startRoad: request?.road ?? 0,
             playerController: context.read<PlayerController>(),
             videoPageController: context.read<VideoPageController>(),
             historyController: inject<HistoryController>(),

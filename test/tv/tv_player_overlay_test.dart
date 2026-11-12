@@ -3,6 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kazumi/tv/player/tv_player_overlay.dart';
 
 void main() {
+  test('episode labels fall back to 第 N 集 for missing or blank names', () {
+    expect(tvEpisodeLabels(['01', '', '03'], 4), [
+      '01',
+      '第 2 集',
+      '03',
+      '第 4 集',
+    ]);
+  });
+
   testWidgets(
     'episode list focuses the playing episode even when another node holds focus',
     (tester) async {

@@ -15,6 +15,17 @@ import 'package:kazumi/tv/player/tv_player_overlay.dart';
 import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_message.dart';
 
+/// Route arguments when the viewer picked an episode before playing.
+class TvPlaybackRequest {
+  const TvPlaybackRequest(this.args, {required this.episode, this.road = 0});
+
+  final OnlineVideoPlaybackArgs args;
+
+  /// 1-based, like [VideoPageController.changeEpisode].
+  final int episode;
+  final int road;
+}
+
 /// D-pad video player. Reuses [VideoPageController] (source resolution,
 /// episode switching) and [PlayerController]; only the controls are TV-specific.
 class TvPlayerPage extends StatefulWidget {
@@ -24,9 +35,15 @@ class TvPlayerPage extends StatefulWidget {
     required this.playerController,
     required this.videoPageController,
     required this.historyController,
+    this.startEpisode,
+    this.startRoad = 0,
   });
 
   final VideoPlaybackArgs args;
+
+  /// Episode chosen in the source picker; null resumes from history.
+  final int? startEpisode;
+  final int startRoad;
   final PlayerController playerController;
   final VideoPageController videoPageController;
   final HistoryController historyController;
@@ -61,6 +78,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
     _applyResume();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _keepFocus();
       _changeEpisode(
         _video.selectedEpisode.episode,
         road: _video.selectedEpisode.road,
@@ -68,6 +86,18 @@ class _TvPlayerPageState extends State<TvPlayerPage>
       );
     });
     _tick = Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
+    _focus.addListener(_keepFocus);
+  }
+
+  /// Closing the source picker dialog restores focus to the detail page
+  /// underneath, racing this page's autofocus; keys then miss the player.
+  /// Take focus back while this is the top route.
+  void _keepFocus() {
+    if (_focus.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _exiting || _focus.hasFocus) return;
+      if (ModalRoute.of(context)?.isCurrent ?? false) _focus.requestFocus();
+    });
   }
 
   /// Resumes from the last watched episode and position, like the phone UI.
@@ -77,6 +107,18 @@ class _TvPlayerPageState extends State<TvPlayerPage>
       _video.bangumiItem,
       _video.currentPlugin.name,
     );
+    final start = widget.startEpisode;
+    if (start != null) {
+      // A picked episode wins; keep the saved position only if it is that one.
+      _video.resetEpisodeState(episode: start, road: widget.startRoad);
+      if (progress != null &&
+          progress.episode == start &&
+          progress.road == widget.startRoad &&
+          GStorage.getSetting(SettingsKeys.playResume)) {
+        _video.historyOffset = progress.progress.inSeconds;
+      }
+      return;
+    }
     if (progress == null ||
         _video.roadList.length <= progress.road ||
         _video.roadList[progress.road].data.length < progress.episode) {
@@ -264,12 +306,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
 
   List<String> _episodeLabels() {
     final road = _video.roadList[_video.selectedEpisode.road];
-    return [
-      for (var i = 0; i < road.data.length; i++)
-        i < road.identifier.length && road.identifier[i].isNotEmpty
-            ? road.identifier[i]
-            : '第 ${i + 1} 集',
-    ];
+    return tvEpisodeLabels(road.identifier, road.data.length);
   }
 
   /// Each overlay observes only what it shows: the video surface must not

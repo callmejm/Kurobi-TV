@@ -73,9 +73,9 @@ class _TvInfoPageState extends State<TvInfoPage> {
             Navigator.of(dialogContext).pop();
             context.navigate(TvRoutes.rules);
           },
-          onPlay: (args) {
+          onPlay: (request) {
             Navigator.of(dialogContext).pop();
-            context.pushNamed(TvRoutes.video, arguments: args);
+            context.pushNamed(TvRoutes.video, arguments: request);
           },
         ),
       ),

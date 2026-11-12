@@ -10,13 +10,16 @@ import 'package:kazumi/services/logging/logger.dart';
 import 'package:kazumi/services/plugin/plugin_search_service.dart';
 import 'package:kazumi/services/plugin/rule_engine_models.dart'
     show RuleCancelToken;
+import 'package:kazumi/tv/player/tv_player_overlay.dart' show tvEpisodeLabels;
+import 'package:kazumi/tv/player/tv_player_page.dart' show TvPlaybackRequest;
 import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_focusable.dart';
 import 'package:kazumi/tv/widgets/tv_message.dart';
 import 'package:kazumi/tv/widgets/tv_row.dart';
 
 /// Full-screen source chooser: searches every rule for the anime, lists the
-/// hits per rule, and hands the chosen one to [onPlay].
+/// hits per rule, then the chosen hit's episodes, and hands the chosen
+/// episode to [onPlay]. Back from the episodes returns to the hits.
 class TvSourcePicker extends StatefulWidget {
   const TvSourcePicker({
     super.key,
@@ -28,7 +31,7 @@ class TvSourcePicker extends StatefulWidget {
 
   final InfoController infoController;
   final PluginsController pluginsController;
-  final void Function(OnlineVideoPlaybackArgs args) onPlay;
+  final void Function(TvPlaybackRequest request) onPlay;
   final VoidCallback onOpenRules;
 
   @override
@@ -40,6 +43,9 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
   late final String _keyword;
   String? _notice;
   bool _opening = false;
+
+  /// The hit whose episodes are listed; null while choosing a hit.
+  OnlineVideoPlaybackArgs? _chosen;
 
   InfoController get _info => widget.infoController;
 
@@ -108,15 +114,16 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
       );
       if (!mounted) return;
       if (roads.isEmpty) throw ChapterErrorException(plugin.name);
-      widget.onPlay(
-        OnlineVideoPlaybackArgs(
+      setState(() {
+        _notice = null;
+        _chosen = OnlineVideoPlaybackArgs(
           bangumiItem: _info.bangumiItem,
           plugin: plugin,
           title: item.name,
           src: item.src,
           roads: roads,
-        ),
-      );
+        );
+      });
     } catch (error) {
       KazumiLogger().w(
         'TvSourcePicker: failed to query playlist',
@@ -149,6 +156,32 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
       ),
     );
   }
+
+  /// One row per road (playback line) of the chosen hit.
+  List<Widget> _episodeRows(OnlineVideoPlaybackArgs chosen) => [
+    for (var r = 0; r < chosen.roads.length; r++)
+      if (chosen.roads[r].data.isNotEmpty)
+        KeyedSubtree(
+          key: ValueKey('road $r'),
+          child: TvRow<String>(
+            title:
+                '${chosen.roads[r].name.isEmpty ? '线路 ${r + 1}' : chosen.roads[r].name}'
+                '  ·  ${chosen.roads[r].data.length} 集',
+            items: tvEpisodeLabels(
+              chosen.roads[r].identifier,
+              chosen.roads[r].data.length,
+            ),
+            itemExtent: 236,
+            height: 88,
+            itemBuilder: (context, label, index) => _tile(
+              label,
+              onSelect: () => widget.onPlay(
+                TvPlaybackRequest(chosen, episode: index + 1, road: r),
+              ),
+            ),
+          ),
+        ),
+  ];
 
   Widget _section(Plugin plugin) {
     final status = _info.pluginSearchStatus[plugin.name];
@@ -223,41 +256,58 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
             );
           }
           _keepFocus();
-          return Focus(
-            focusNode: _area,
-            onKeyEvent: (_, event) {
-              if (event is KeyDownEvent) _moved = true;
-              return KeyEventResult.ignored;
+          final chosen = _chosen;
+          return PopScope(
+            canPop: chosen == null,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop) setState(() => _chosen = null);
             },
-            child: ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    TvTokens.itemInset,
-                    0,
-                    0,
-                    16,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('选择播放源', style: text.headlineSmall),
-                      const SizedBox(height: 4),
-                      Text(
-                        _notice ?? '在已安装的规则中搜索「$_keyword」',
-                        style: text.bodyMedium!.copyWith(
-                          color: TvTokens.textMuted,
+            child: Focus(
+              focusNode: _area,
+              onKeyEvent: (_, event) {
+                if (event is KeyDownEvent) _moved = true;
+                return KeyEventResult.ignored;
+              },
+              child: ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      TvTokens.itemInset,
+                      0,
+                      0,
+                      16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          chosen == null ? '选择播放源' : '选择剧集',
+                          style: text.headlineSmall,
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _notice ??
+                              (chosen == null
+                                  ? '在已安装的规则中搜索「$_keyword」'
+                                  : '${chosen.plugin.name}  ·  ${chosen.title}'
+                                        '    按返回键重新选择播放源'),
+                          style: text.bodyMedium!.copyWith(
+                            color: TvTokens.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (chosen != null)
+                    ..._episodeRows(chosen)
+                  else
+                    for (final plugin in plugins)
+                      KeyedSubtree(
+                        key: ValueKey(plugin.name),
+                        child: _section(plugin),
                       ),
-                    ],
-                  ),
-                ),
-                for (final plugin in plugins)
-                  KeyedSubtree(
-                    key: ValueKey(plugin.name),
-                    child: _section(plugin),
-                  ),
-              ],
+                ],
+              ),
             ),
           );
         },

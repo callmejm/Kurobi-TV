@@ -3,6 +3,14 @@ import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_focusable.dart';
 import 'package:kazumi/tv/widgets/tv_row.dart';
 
+/// Episode names for one road: the site's label, else 第 N 集.
+List<String> tvEpisodeLabels(List<String> identifiers, int count) => [
+  for (var i = 0; i < count; i++)
+    i < identifiers.length && identifiers[i].isNotEmpty
+        ? identifiers[i]
+        : '第 ${i + 1} 集',
+];
+
 String _clock(Duration d) {
   String two(int n) => n.toString().padLeft(2, '0');
   final h = d.inHours;
