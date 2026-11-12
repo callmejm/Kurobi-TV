@@ -16,7 +16,8 @@ class TvEnvironment {
     if (cached != null) return cached;
     if (defaultTargetPlatform != TargetPlatform.android) return _cached = false;
     try {
-      return _cached = await _channel.invokeMethod<bool>('isTelevision') ?? false;
+      return _cached =
+          await _channel.invokeMethod<bool>('isTelevision') ?? false;
     } catch (_) {
       return _cached = false;
     }

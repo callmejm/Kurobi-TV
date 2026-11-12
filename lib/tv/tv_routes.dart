@@ -1,0 +1,13 @@
+/// Route paths for the TV UI. `info` and `video` take route arguments.
+class TvRoutes {
+  TvRoutes._();
+
+  static const home = '/tv/home';
+  static const timeline = '/tv/timeline';
+  static const collect = '/tv/collect';
+  static const history = '/tv/history';
+  static const search = '/tv/search';
+  static const rules = '/tv/rules';
+  static const info = '/tv/info';
+  static const video = '/tv/video';
+}

@@ -23,6 +23,9 @@ import 'package:kazumi/services/platform/desktop_window_config.dart';
 import 'package:kazumi/services/platform/webview_feature_service.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/navigation.dart';
+import 'package:kazumi/tv/tv_app.dart';
+import 'package:kazumi/tv/tv_environment.dart';
+import 'package:kazumi/tv/tv_module.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,6 +101,21 @@ void main() async {
   }
   await MeteredNetworkService.refresh();
   ProxyManager.applyProxy();
+  if (await TvEnvironment.isTV()) {
+    runApp(
+      ModularApp(
+        module: tvAppModule,
+        navigatorKey: rootNavigatorKey,
+        navigatorObservers: [KazumiDialog.observer, rootRouteObserver],
+        defaultTransition: TransitionType.material,
+        provide: (scoped) {
+          scoped.addChangeNotifier<ThemeProvider>(ThemeProvider.new);
+        },
+        child: const TvApp(),
+      ),
+    );
+    return;
+  }
   runApp(
     ModularApp(
       module: appModule,

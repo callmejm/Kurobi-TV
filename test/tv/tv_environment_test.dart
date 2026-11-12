@@ -25,10 +25,12 @@ void main() {
     expect(await TvEnvironment.isTV(), isTrue);
   });
 
-  test('isTV returns false and does not throw when the channel is missing',
-      () async {
-    expect(await TvEnvironment.isTV(), isFalse);
-  });
+  test(
+    'isTV returns false and does not throw when the channel is missing',
+    () async {
+      expect(await TvEnvironment.isTV(), isFalse);
+    },
+  );
 
   test('isTV returns the channel result and caches it', () async {
     var calls = 0;
