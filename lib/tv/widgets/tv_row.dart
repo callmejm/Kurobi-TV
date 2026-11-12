@@ -14,7 +14,11 @@ class TvRow<T> extends StatefulWidget {
     this.itemExtent = 200,
     this.height = 300,
     this.onIndexFocused,
+    this.initialIndex = 0,
   });
+
+  /// Item scrolled into view when the row first builds (e.g. the playing episode).
+  final int initialIndex;
 
   /// Called with the item index whenever an item gains focus (for paging).
   final void Function(int index)? onIndexFocused;
@@ -31,6 +35,9 @@ class TvRow<T> extends StatefulWidget {
 
 class _TvRowState<T> extends State<TvRow<T>> {
   final List<FocusNode> _nodes = [];
+  late final ScrollController _scroll = ScrollController(
+    initialScrollOffset: widget.initialIndex * widget.itemExtent,
+  );
   int _lastIndex = 0;
 
   FocusNode _nodeFor(int index) {
@@ -59,6 +66,7 @@ class _TvRowState<T> extends State<TvRow<T>> {
     for (final node in _nodes) {
       node.dispose();
     }
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -79,6 +87,7 @@ class _TvRowState<T> extends State<TvRow<T>> {
           height: widget.height,
           child: FocusTraversalGroup(
             child: ListView.builder(
+              controller: _scroll,
               scrollDirection: Axis.horizontal,
               itemExtent: widget.itemExtent,
               itemCount: widget.items.length,

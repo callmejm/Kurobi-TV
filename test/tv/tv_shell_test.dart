@@ -43,6 +43,37 @@ void main() {
     expect(FocusManager.instance.primaryFocus, isNotNull);
   });
 
+  testWidgets('arrow left works when content sits in a nested navigator', (
+    tester,
+  ) async {
+    final content = FocusNode();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TvShell(
+          location: '/tv/home',
+          onNavigate: (_) {},
+          child: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute<void>(
+              builder: (_) => Center(
+                child: TvFocusable(
+                  focusNode: content,
+                  autofocus: true,
+                  onSelect: () {},
+                  child: const SizedBox(width: 200, height: 200),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(content.hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(content.hasFocus, isFalse);
+  });
+
   testWidgets('Back in content focuses the rail, Back on the rail exits', (
     tester,
   ) async {

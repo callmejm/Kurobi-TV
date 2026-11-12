@@ -65,8 +65,11 @@ class TvPlayerControls extends StatelessWidget {
   }
 }
 
-/// Episode picker for the current road; the playing episode starts focused.
-class TvEpisodeList extends StatelessWidget {
+/// Episode picker for the current road; the playing episode is focused on open.
+///
+/// Focus is requested explicitly because `autofocus` is ignored while another
+/// node (the player's key handler) already holds focus.
+class TvEpisodeList extends StatefulWidget {
   const TvEpisodeList({
     super.key,
     required this.labels,
@@ -79,6 +82,27 @@ class TvEpisodeList extends StatelessWidget {
   final void Function(int index) onSelect;
 
   @override
+  State<TvEpisodeList> createState() => _TvEpisodeListState();
+}
+
+class _TvEpisodeListState extends State<TvEpisodeList> {
+  final _selectedNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _selectedNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _selectedNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return ColoredBox(
@@ -87,19 +111,20 @@ class TvEpisodeList extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(48, 24, 48, 27),
         child: TvRow<int>(
           title: '选集',
-          items: List.generate(labels.length, (i) => i),
+          items: List.generate(widget.labels.length, (i) => i),
           itemExtent: 148,
           height: 72,
+          initialIndex: widget.selectedIndex,
           itemBuilder: (context, index, _) => TvFocusable(
-            autofocus: index == selectedIndex,
-            onSelect: () => onSelect(index),
+            focusNode: index == widget.selectedIndex ? _selectedNode : null,
+            onSelect: () => widget.onSelect(index),
             child: ColoredBox(
-              color: index == selectedIndex
+              color: index == widget.selectedIndex
                   ? scheme.primaryContainer
                   : scheme.surfaceContainerHighest,
               child: Center(
                 child: Text(
-                  labels[index],
+                  widget.labels[index],
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

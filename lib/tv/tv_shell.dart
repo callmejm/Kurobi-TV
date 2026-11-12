@@ -63,6 +63,20 @@ class _TvShellState extends State<TvShell> {
     }
   }
 
+  /// Left from content: move within content if possible, else reach the rail.
+  /// Needed because each outlet page is its own focus scope whose edge stops.
+  KeyEventResult _onContentKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.arrowLeft) {
+      return KeyEventResult.ignored;
+    }
+    final moved = FocusManager.instance.primaryFocus?.focusInDirection(
+      TraversalDirection.left,
+    );
+    if (moved != true) _railNodes[_activeIndex].requestFocus();
+    return KeyEventResult.handled;
+  }
+
   @override
   void dispose() {
     for (final node in _railNodes) {
@@ -124,7 +138,9 @@ class _TvShellState extends State<TvShell> {
                   ),
                 ),
                 const SizedBox(width: 32),
-                Expanded(child: widget.child),
+                Expanded(
+                  child: Focus(onKeyEvent: _onContentKey, child: widget.child),
+                ),
               ],
             ),
           ),

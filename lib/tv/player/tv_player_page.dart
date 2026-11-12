@@ -33,7 +33,8 @@ class TvPlayerPage extends StatefulWidget {
   State<TvPlayerPage> createState() => _TvPlayerPageState();
 }
 
-class _TvPlayerPageState extends State<TvPlayerPage> {
+class _TvPlayerPageState extends State<TvPlayerPage>
+    with WidgetsBindingObserver {
   static const _seekStep = Duration(seconds: 10);
   static const _controlsTimeout = Duration(seconds: 4);
 
@@ -51,6 +52,7 @@ class _TvPlayerPageState extends State<TvPlayerPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _video.applyPlaybackArgs(widget.args);
     _applyResume();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -107,7 +109,22 @@ class _TvPlayerPageState extends State<TvPlayerPage> {
         duration: playback.playerDuration,
       );
     }
-    if (playback.completed && !_video.loading) _playNext();
+    if (playback.completed && !_video.loading) {
+      if (playback.resumedNearEnd) {
+        // Replay a stale near-end resume instead of skipping to the next episode.
+        unawaited(playback.restartFromBeginning());
+      } else {
+        _playNext();
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Home on the remote: the surface keeps decoding in the background otherwise.
+    if (state == AppLifecycleState.paused && _player.playback.playing) {
+      _player.pause();
+    }
   }
 
   void _playNext() {
@@ -127,11 +144,20 @@ class _TvPlayerPageState extends State<TvPlayerPage> {
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
+    // Android Back arrives as a route pop (PopScope); handling the key too
+    // would run Back twice.
+    if (event.logicalKey == LogicalKeyboardKey.goBack) {
+      return KeyEventResult.ignored;
+    }
     final action = tvPlayerActionFor(
       event.logicalKey,
       controlsVisible: _controlsVisible,
       episodesOpen: _episodesOpen,
     );
+    // The error message owns arrows and OK so its retry button is reachable.
+    if (_video.errorMessage != null && action != TvPlayerAction.back) {
+      return KeyEventResult.ignored;
+    }
     switch (action) {
       case TvPlayerAction.none:
         return KeyEventResult.ignored;
@@ -177,6 +203,7 @@ class _TvPlayerPageState extends State<TvPlayerPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tick?.cancel();
     _hideControls?.cancel();
     _focus.dispose();

@@ -26,7 +26,7 @@ import 'package:kazumi/tv/player/tv_player_page.dart';
 import 'package:kazumi/tv/pages/tv_info_page.dart';
 import 'package:kazumi/tv/pages/tv_rules_page.dart';
 import 'package:kazumi/tv/tv_routes.dart';
-import 'package:kazumi/tv/tv_shell.dart';
+import 'package:kazumi/tv/tv_shell_route.dart';
 
 /// Shell with the navigation rail; destination pages render in its outlet.
 final tvShellModule = createModule(
@@ -38,11 +38,7 @@ final tvShellModule = createModule(
       ..addSingleton<TimelineController>(TimelineController.new)
       ..route(
         '/',
-        child: (context, state) => TvShell(
-          location: state.uri.path,
-          onNavigate: (path) => context.navigate(path),
-          child: const RouterOutlet(),
-        ),
+        child: (context, state) => TvShellRoute(location: state.uri.path),
         children: (sub) {
           sub
             ..route(
