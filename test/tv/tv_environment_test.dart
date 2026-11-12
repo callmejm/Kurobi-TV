@@ -25,12 +25,21 @@ void main() {
     expect(await TvEnvironment.isTV(), isTrue);
   });
 
-  test(
-    'isTV returns false and does not throw when the channel is missing',
-    () async {
-      expect(await TvEnvironment.isTV(), isFalse);
-    },
-  );
+  test('isTV waits for the channel when the engine starts before the '
+      'activity (a background service started the app)', () async {
+    final result = TvEnvironment.isTV();
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    messenger.setMockMethodCallHandler(channel, (call) async => true);
+    expect(await result, isTrue);
+  });
+
+  test('isTV returns false when the channel reports an error', () async {
+    messenger.setMockMethodCallHandler(
+      channel,
+      (call) async => throw PlatformException(code: 'boom'),
+    );
+    expect(await TvEnvironment.isTV(), isFalse);
+  });
 
   test('isTV returns the channel result and caches it', () async {
     var calls = 0;

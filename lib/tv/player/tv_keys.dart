@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 
 enum TvPlayerAction {
   playPause,
+  play,
+  pause,
   seekBack,
   seekForward,
   showControls,
@@ -32,11 +34,11 @@ TvPlayerAction tvPlayerActionFor(
   if (key == LogicalKeyboardKey.enter ||
       key == LogicalKeyboardKey.numpadEnter ||
       key == LogicalKeyboardKey.select ||
-      key == LogicalKeyboardKey.mediaPlayPause ||
-      key == LogicalKeyboardKey.mediaPlay ||
-      key == LogicalKeyboardKey.mediaPause) {
+      key == LogicalKeyboardKey.mediaPlayPause) {
     return TvPlayerAction.playPause;
   }
+  if (key == LogicalKeyboardKey.mediaPlay) return TvPlayerAction.play;
+  if (key == LogicalKeyboardKey.mediaPause) return TvPlayerAction.pause;
   if (key == LogicalKeyboardKey.arrowUp) {
     return controlsVisible ? TvPlayerAction.none : TvPlayerAction.showControls;
   }
@@ -44,17 +46,33 @@ TvPlayerAction tvPlayerActionFor(
   return TvPlayerAction.none;
 }
 
-/// Limits held-key repeats so seeking does not flood the player.
-class SeekThrottle {
-  SeekThrottle(this.interval);
+/// Adds up D-pad seek presses into one target so the player seeks once, after
+/// the user stops pressing. Holding the key grows the step: 10 s, then 30 s,
+/// then 60 s.
+class SeekScrubber {
+  Duration? _target;
+  int _presses = 0;
 
-  final Duration interval;
-  DateTime? _last;
+  Duration? get target => _target;
 
-  bool allow(DateTime now) {
-    final last = _last;
-    if (last != null && now.difference(last) < interval) return false;
-    _last = now;
-    return true;
+  Duration nudge(
+    int direction, {
+    required Duration position,
+    required Duration duration,
+  }) {
+    final seconds = _presses < 4 ? 10 : (_presses < 12 ? 30 : 60);
+    _presses++;
+    var next = (_target ?? position) + Duration(seconds: seconds * direction);
+    if (next < Duration.zero) next = Duration.zero;
+    if (duration > Duration.zero && next > duration) next = duration;
+    return _target = next;
+  }
+
+  /// Returns the pending target (null if none) and starts a fresh scrub.
+  Duration? commit() {
+    final target = _target;
+    _target = null;
+    _presses = 0;
+    return target;
   }
 }

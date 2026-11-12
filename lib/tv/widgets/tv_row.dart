@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:kazumi/tv/tv_theme.dart';
 
 /// Titled horizontal row of D-pad focusable items.
 ///
+/// The focused item is scrolled to the row's first slot, so focus sits in a
+/// fixed place while the row moves under it. Moving up or down between rows
+/// then lands on the other row's first visible item, which is the item that
+/// was focused there last.
+///
 /// If the focused item disappears (list reloaded or shortened), focus moves to
 /// the item now at the same position, or the last one, so it is never lost.
-/// Entering a row from another row uses Flutter's geometric traversal.
 class TvRow<T> extends StatefulWidget {
   const TvRow({
     super.key,
     required this.title,
     required this.items,
     required this.itemBuilder,
-    this.itemExtent = 200,
-    this.height = 300,
+    this.itemExtent = TvTokens.posterWidth + TvTokens.posterGap,
+    this.height = TvTokens.posterHeight + 88,
     this.onIndexFocused,
     this.initialIndex = 0,
   });
@@ -34,6 +39,9 @@ class TvRow<T> extends StatefulWidget {
 }
 
 class _TvRowState<T> extends State<TvRow<T>> {
+  // Room for the focus scale and ring at the row's edges.
+  static const _inset = EdgeInsets.symmetric(horizontal: 10, vertical: 12);
+
   final List<FocusNode> _nodes = [];
   late final ScrollController _scroll = ScrollController(
     initialScrollOffset: widget.initialIndex * widget.itemExtent,
@@ -45,6 +53,25 @@ class _TvRowState<T> extends State<TvRow<T>> {
       _nodes.add(FocusNode(skipTraversal: true, canRequestFocus: false));
     }
     return _nodes[index];
+  }
+
+  void _onItemFocused(int index) {
+    _lastIndex = index;
+    widget.onIndexFocused?.call(index);
+    // After TvFocusable's ensureVisible, so this pinning wins horizontally.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final position = _scroll.position;
+      final target = (index * widget.itemExtent).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      _scroll.animateTo(
+        target,
+        duration: TvTokens.focusDuration,
+        curve: TvTokens.focusCurve,
+      );
+    });
   }
 
   @override
@@ -77,7 +104,7 @@ class _TvRowState<T> extends State<TvRow<T>> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: EdgeInsets.only(left: _inset.left),
           child: Text(
             widget.title,
             style: Theme.of(context).textTheme.titleLarge,
@@ -88,18 +115,17 @@ class _TvRowState<T> extends State<TvRow<T>> {
           child: FocusTraversalGroup(
             child: ListView.builder(
               controller: _scroll,
+              padding: _inset,
               scrollDirection: Axis.horizontal,
               itemExtent: widget.itemExtent,
               itemCount: widget.items.length,
               itemBuilder: (context, index) => Focus(
                 focusNode: _nodeFor(index),
                 onFocusChange: (focused) {
-                  if (!focused) return;
-                  _lastIndex = index;
-                  widget.onIndexFocused?.call(index);
+                  if (focused) _onItemFocused(index);
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.only(right: TvTokens.posterGap),
                   child: widget.itemBuilder(
                     context,
                     widget.items[index],

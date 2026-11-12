@@ -9,8 +9,10 @@ import 'package:kazumi/services/logging/logger.dart';
 import 'package:kazumi/services/plugin/plugin_search_service.dart';
 import 'package:kazumi/services/plugin/rule_engine_models.dart'
     show RuleCancelToken;
+import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_focusable.dart';
 import 'package:kazumi/tv/widgets/tv_message.dart';
+import 'package:kazumi/tv/widgets/tv_row.dart';
 
 /// Full-screen source chooser: searches every rule for the anime, lists the
 /// hits per rule, and hands the chosen one to [onPlay].
@@ -91,32 +93,43 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
     }
   }
 
-  Widget _row(String text, {VoidCallback? onSelect, bool autofocus = false}) {
-    final scheme = Theme.of(context).colorScheme;
-    final label = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
-    );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: onSelect == null
-          ? label
-          : TvFocusable(
-              autofocus: autofocus,
-              onSelect: onSelect,
-              child: ColoredBox(
-                color: scheme.surfaceContainerHighest,
-                child: SizedBox(width: double.infinity, child: label),
-              ),
-            ),
+  /// One result tile: white with dark text when focused.
+  Widget _tile(
+    String text, {
+    required VoidCallback onSelect,
+    bool autofocus = false,
+  }) {
+    final style = Theme.of(context).textTheme.bodyLarge!;
+    return TvFocusable(
+      // Results stream in; the first tile to appear takes focus.
+      autofocus: autofocus,
+      onSelect: onSelect,
+      ring: false,
+      scale: 1.05,
+      builder: (context, focused) => AnimatedContainer(
+        duration: TvTokens.focusDuration,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        alignment: Alignment.centerLeft,
+        color: focused ? TvTokens.focus : TvTokens.surfaceHigh,
+        child: Text(
+          text,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: style.copyWith(color: focused ? Colors.black : TvTokens.text),
+        ),
+      ),
     );
   }
 
-  List<Widget> _section(Plugin plugin, bool first) {
+  Widget _section(Plugin plugin) {
     final status = _info.pluginSearchStatus[plugin.name];
-    final title = Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 8),
-      child: Text(plugin.name, style: Theme.of(context).textTheme.titleMedium),
+    final text = Theme.of(context).textTheme;
+    Widget note(String message) => Padding(
+      padding: const EdgeInsets.fromLTRB(TvTokens.itemInset, 6, 0, 22),
+      child: Text(
+        '${plugin.name}  ·  $message',
+        style: text.titleMedium!.copyWith(color: TvTokens.textMuted),
+      ),
     );
     switch (status) {
       case PluginSearchStatus.success:
@@ -124,38 +137,49 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
             .where((r) => r.pluginName == plugin.name)
             .expand((r) => r.data)
             .toList();
-        return [
-          title,
-          for (var i = 0; i < results.length; i++)
-            _row(
-              results[i].name,
-              autofocus: first && i == 0,
-              onSelect: () => _open(plugin, results[i]),
-            ),
-        ];
+        return TvRow<SearchItem>(
+          title: '${plugin.name}  ·  ${results.length} 个结果',
+          items: results,
+          itemExtent: 236,
+          height: 88,
+          itemBuilder: (context, item, index) => _tile(
+            item.name,
+            autofocus: index == 0,
+            onSelect: () => _open(plugin, item),
+          ),
+        );
       case PluginSearchStatus.captcha:
-        return [title, _row('需要在手机上完成验证')];
+        return note('需要在手机上完成验证');
       case PluginSearchStatus.noResult:
-        return [title, _row('无结果')];
+        return note('无结果');
       case PluginSearchStatus.error:
-        return [
-          title,
-          _row(
-            '检索失败，按确认键重试',
-            autofocus: first,
+        return TvRow<String>(
+          title: '${plugin.name}  ·  检索失败',
+          items: const ['重试'],
+          itemExtent: 236,
+          height: 88,
+          itemBuilder: (context, item, index) => _tile(
+            '按确认键重试',
+            autofocus: true,
             onSelect: () => _service.querySource(_keyword, plugin.name),
           ),
-        ];
+        );
       case PluginSearchStatus.pending:
       case null:
-        return [title, _row('搜索中…')];
+        return note('搜索中…');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 27),
+      padding: const EdgeInsets.fromLTRB(
+        TvTokens.edgeH - TvTokens.itemInset,
+        TvTokens.edgeV,
+        TvTokens.edgeH - TvTokens.itemInset,
+        0,
+      ),
       child: Observer(
         builder: (_) {
           final plugins = widget.pluginsController.pluginList.toList();
@@ -168,14 +192,28 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
           }
           return ListView(
             children: [
-              Text('选择视频源', style: Theme.of(context).textTheme.headlineSmall),
-              if (_notice != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(_notice!),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  TvTokens.itemInset,
+                  0,
+                  0,
+                  16,
                 ),
-              for (var i = 0; i < plugins.length; i++)
-                ..._section(plugins[i], i == 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('选择播放源', style: text.headlineSmall),
+                    const SizedBox(height: 4),
+                    Text(
+                      _notice ?? '在已安装的规则中搜索「$_keyword」',
+                      style: text.bodyMedium!.copyWith(
+                        color: TvTokens.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              for (final plugin in plugins) _section(plugin),
             ],
           );
         },

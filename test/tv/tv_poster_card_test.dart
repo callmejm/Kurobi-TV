@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_poster_card.dart';
 
 void main() {
-  testWidgets('long title and subtitle do not overflow at text scale 1.3', (
+  testWidgets('long title and subtitle fit the poster row slot', (
     tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
-          child: Scaffold(
-            body: Center(
-              child: SizedBox(
-                width: 200,
-                height: 300,
-                child: TvPosterCard(
-                  title: '关于我转生变成史莱姆这档事 第三季 超长标题超长标题超长标题超长标题',
-                  subtitle: '第 12 集 超长副标题超长副标题超长副标题',
-                  cover: const ColoredBox(color: Colors.grey),
-                  onSelect: () {},
-                ),
+        theme: buildTvTheme(),
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: TvTokens.posterWidth,
+              height: TvTokens.posterHeight + 72,
+              child: TvPosterCard(
+                title: '关于我转生变成史莱姆这档事 第三季 超长标题超长标题超长标题超长标题',
+                subtitle: '第 12 集 超长副标题超长副标题超长副标题',
+                cover: const ColoredBox(color: Colors.grey),
+                onSelect: () {},
               ),
             ),
           ),

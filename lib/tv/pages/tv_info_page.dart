@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:kazumi/bean/card/network_img_layer.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/collect/collect_type.dart';
 import 'package:kazumi/pages/collect/collect_controller.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/tv/tv_routes.dart';
+import 'package:kazumi/tv/tv_theme.dart';
+import 'package:kazumi/tv/widgets/tv_backdrop.dart';
+import 'package:kazumi/tv/widgets/tv_bangumi_headline.dart';
 import 'package:kazumi/tv/widgets/tv_focusable.dart';
 import 'package:kazumi/tv/widgets/tv_source_picker.dart';
 
@@ -63,6 +65,7 @@ class _TvInfoPageState extends State<TvInfoPage> {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog.fullscreen(
+        backgroundColor: TvTokens.background,
         child: TvSourcePicker(
           infoController: _info,
           pluginsController: widget.pluginsController,
@@ -79,87 +82,54 @@ class _TvInfoPageState extends State<TvInfoPage> {
     );
   }
 
-  Widget _button(
-    String label,
-    VoidCallback onSelect, {
-    bool autofocus = false,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    return TvFocusable(
-      autofocus: autofocus,
-      onSelect: onSelect,
-      child: ColoredBox(
-        color: scheme.primaryContainer,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-          child: Text(label),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final item = _info.bangumiItem;
-    final theme = Theme.of(context);
+    final collected = _collectType != CollectType.none;
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 27),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 280,
-              height: 400,
-              child: NetworkImgLayer(
-                src: item.images['large'] ?? '',
-                width: 280,
-                height: 400,
-              ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          TvBackdrop(imageUrl: item.images['large'] ?? ''),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              TvTokens.edgeH,
+              TvTokens.edgeV + 40,
+              TvTokens.edgeH,
+              TvTokens.edgeV + 20,
             ),
-            const SizedBox(width: 40),
-            Expanded(
+            child: FractionallySizedBox(
+              widthFactor: 0.56,
+              alignment: Alignment.topLeft,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.nameCn.isEmpty ? item.name : item.nameCn,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    [
-                      if (item.airDate.isNotEmpty) item.airDate,
-                      if (item.ratingScore > 0) '评分 ${item.ratingScore}',
-                    ].join('  ·  '),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Text(
-                      item.summary,
-                      maxLines: 8,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                  TvBangumiHeadline(item: item, titleLines: 2, summaryLines: 6),
+                  const Spacer(),
                   Row(
                     children: [
-                      _button('开始观看', _openSources, autofocus: true),
-                      const SizedBox(width: 16),
-                      _button(
-                        _collectType == CollectType.none
-                            ? '未追'
-                            : _collectType.label,
-                        _cycleCollect,
+                      TvButton(
+                        icon: Icons.play_arrow_rounded,
+                        label: '开始观看',
+                        selected: true,
+                        autofocus: true,
+                        onSelect: _openSources,
+                      ),
+                      const SizedBox(width: 12),
+                      TvButton(
+                        icon: collected
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        label: collected ? _collectType.label : '追番',
+                        onSelect: _cycleCollect,
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

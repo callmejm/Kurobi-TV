@@ -5,22 +5,28 @@ import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/tv/tv_routes.dart';
 import 'package:kazumi/tv/widgets/tv_poster_card.dart';
 
+String tvBangumiTitle(BangumiItem item) =>
+    item.nameCn.isEmpty ? item.name : item.nameCn;
+
 /// Poster card for a [BangumiItem]; OK opens its detail page.
 TvPosterCard tvBangumiCard(
   BuildContext context,
   BangumiItem item, {
   bool autofocus = false,
   String? subtitle,
+  ValueChanged<bool>? onFocusChange,
 }) {
   return TvPosterCard(
-    title: item.nameCn.isEmpty ? item.name : item.nameCn,
+    title: tvBangumiTitle(item),
     subtitle: subtitle,
     autofocus: autofocus,
+    onFocusChange: onFocusChange,
     cover: LayoutBuilder(
       builder: (context, constraints) => NetworkImgLayer(
         src: item.images['large'] ?? '',
         width: constraints.maxWidth,
         height: constraints.maxHeight,
+        borderRadius: BorderRadius.zero,
       ),
     ),
     onSelect: () => context.pushNamed(TvRoutes.info, arguments: item),

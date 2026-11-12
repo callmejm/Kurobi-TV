@@ -3,6 +3,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_type.dart';
 import 'package:kazumi/pages/collect/collect_controller.dart';
+import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_bangumi_card.dart';
 import 'package:kazumi/tv/widgets/tv_message.dart';
 import 'package:kazumi/tv/widgets/tv_row.dart';
@@ -33,29 +34,37 @@ class _TvCollectPageState extends State<TvCollectPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Observer(
-      builder: (_) {
-        final all = widget.controller.collectibles.toList();
-        final rows = <Widget>[];
-        for (final type in _shownTypes) {
-          final items = all.where((c) => c.type == type.value).toList()
-            ..sort((a, b) => b.time.compareTo(a.time));
-          if (items.isEmpty) continue;
-          rows.add(
-            TvRow<CollectedBangumi>(
-              title: type.label,
-              items: items,
-              itemBuilder: (context, item, index) => tvBangumiCard(
-                context,
-                item.bangumiItem,
-                autofocus: rows.isEmpty && index == 0,
+    return Padding(
+      padding: TvTokens.pagePadding,
+      child: Observer(
+        builder: (_) {
+          final all = widget.controller.collectibles.toList();
+          final groups = <(CollectType, List<CollectedBangumi>)>[
+            for (final type in _shownTypes)
+              (
+                type,
+                all.where((c) => c.type == type.value).toList()
+                  ..sort((a, b) => b.time.compareTo(a.time)),
               ),
-            ),
+          ].where((group) => group.$2.isNotEmpty).toList();
+          if (groups.isEmpty) return const TvMessage(text: '还没有收藏');
+          return ListView(
+            padding: const EdgeInsets.only(top: 12),
+            children: [
+              for (var row = 0; row < groups.length; row++)
+                TvRow<CollectedBangumi>(
+                  title: '${groups[row].$1.label}  ${groups[row].$2.length}',
+                  items: groups[row].$2,
+                  itemBuilder: (context, item, index) => tvBangumiCard(
+                    context,
+                    item.bangumiItem,
+                    autofocus: row == 0 && index == 0,
+                  ),
+                ),
+            ],
           );
-        }
-        if (rows.isEmpty) return const TvMessage(text: '还没有收藏');
-        return ListView(children: rows);
-      },
+        },
+      ),
     );
   }
 }

@@ -11,6 +11,7 @@ import 'package:kazumi/pages/video/video_playback_args.dart';
 import 'package:kazumi/services/storage/storage.dart';
 import 'package:kazumi/tv/player/tv_keys.dart';
 import 'package:kazumi/tv/player/tv_player_overlay.dart';
+import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_message.dart';
 
 /// D-pad video player. Reuses [VideoPageController] (source resolution,
@@ -35,13 +36,14 @@ class TvPlayerPage extends StatefulWidget {
 
 class _TvPlayerPageState extends State<TvPlayerPage>
     with WidgetsBindingObserver {
-  static const _seekStep = Duration(seconds: 10);
+  static const _seekSettle = Duration(milliseconds: 600);
   static const _controlsTimeout = Duration(seconds: 4);
 
   final _focus = FocusNode(debugLabel: 'TV player keys');
-  final _seekThrottle = SeekThrottle(const Duration(milliseconds: 250));
+  final _scrubber = SeekScrubber();
   Timer? _tick;
   Timer? _hideControls;
+  Timer? _seekCommit;
   bool _controlsVisible = false;
   bool _episodesOpen = false;
   bool _exiting = false;
@@ -163,16 +165,29 @@ class _TvPlayerPageState extends State<TvPlayerPage>
         return KeyEventResult.ignored;
       case TvPlayerAction.seekBack:
       case TvPlayerAction.seekForward:
+        // Presses and key repeats move a target; the player seeks once the
+        // remote rests, instead of once per press.
+        final playback = _player.playback;
+        _scrubber.nudge(
+          action == TvPlayerAction.seekBack ? -1 : 1,
+          position: playback.currentPosition,
+          duration: playback.duration,
+        );
         _showControls();
-        if (_seekThrottle.allow(DateTime.now())) {
-          _player.seekBy(
-            action == TvPlayerAction.seekBack ? -_seekStep : _seekStep,
-          );
-        }
+        setState(() {});
+        _seekCommit?.cancel();
+        _seekCommit = Timer(_seekSettle, _commitSeek);
       case TvPlayerAction.playPause:
         if (event is KeyDownEvent) {
           _showControls();
           _player.playOrPause();
+        }
+      case TvPlayerAction.play:
+        if (event is KeyDownEvent) _player.play();
+      case TvPlayerAction.pause:
+        if (event is KeyDownEvent) {
+          _showControls();
+          _player.pause();
         }
       case TvPlayerAction.showControls:
         _showControls();
@@ -186,6 +201,14 @@ class _TvPlayerPageState extends State<TvPlayerPage>
         if (event is KeyDownEvent) _back();
     }
     return KeyEventResult.handled;
+  }
+
+  void _commitSeek() {
+    final target = _scrubber.commit();
+    if (!mounted || target == null) return;
+    setState(() {});
+    _player.seek(target);
+    _showControls();
   }
 
   /// Back closes the episode list, then the controls, then leaves the page.
@@ -206,6 +229,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
     WidgetsBinding.instance.removeObserver(this);
     _tick?.cancel();
     _hideControls?.cancel();
+    _seekCommit?.cancel();
     _focus.dispose();
     super.dispose();
   }
@@ -236,6 +260,18 @@ class _TvPlayerPageState extends State<TvPlayerPage>
     );
   }
 
+  List<String> _episodeLabels() {
+    final road = _video.roadList[_video.selectedEpisode.road];
+    return [
+      for (var i = 0; i < road.data.length; i++)
+        i < road.identifier.length && road.identifier[i].isNotEmpty
+            ? road.identifier[i]
+            : '第 ${i + 1} 集',
+    ];
+  }
+
+  /// Each overlay observes only what it shows: the video surface must not
+  /// rebuild on every position update.
   Widget _body() {
     final error = _video.errorMessage;
     if (error != null) {
@@ -248,41 +284,58 @@ class _TvPlayerPageState extends State<TvPlayerPage>
         ),
       );
     }
-    final playback = _player.playback;
-    final road = _video.roadList[_video.selectedEpisode.road];
+    final muted = Theme.of(
+      context,
+    ).textTheme.titleMedium!.copyWith(color: TvTokens.textMuted);
     return Stack(
       fit: StackFit.expand,
       children: [
         PlayerItemSurface(playerController: _player),
-        if (_video.loading || playback.loading)
-          Center(child: Text(_video.loading ? '视频资源解析中…' : '播放器加载中…')),
+        Observer(
+          builder: (_) {
+            final playback = _player.playback;
+            if (_video.loading || playback.loading) {
+              return Align(
+                alignment: const Alignment(0, 0.35),
+                child: Text(
+                  _video.loading ? '正在解析视频地址…' : '正在缓冲…',
+                  style: muted,
+                ),
+              );
+            }
+            if (!playback.playing && !_controlsVisible && !_episodesOpen) {
+              return const TvPausedBadge();
+            }
+            return const SizedBox.shrink();
+          },
+        ),
         if (_controlsVisible)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: TvPlayerControls(
-              title: '${_video.title} · 第 ${_video.selectedEpisode.episode} 集',
-              position: playback.currentPosition,
-              duration: playback.duration,
-              playing: playback.playing,
-            ),
+          Observer(
+            builder: (_) {
+              final playback = _player.playback;
+              final episode = _video.selectedEpisode.episode;
+              final labels = _episodeLabels();
+              return TvPlayerControls(
+                title: _video.title,
+                subtitle: episode - 1 < labels.length
+                    ? labels[episode - 1]
+                    : '第 $episode 集',
+                position: playback.currentPosition,
+                duration: playback.duration,
+                playing: playback.playing,
+                seekTarget: _scrubber.target,
+              );
+            },
           ),
         if (_episodesOpen)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: TvEpisodeList(
-              labels: [
-                for (var i = 0; i < road.data.length; i++)
-                  i < road.identifier.length && road.identifier[i].isNotEmpty
-                      ? road.identifier[i]
-                      : '${i + 1}',
-              ],
-              selectedIndex: _video.selectedEpisode.episode - 1,
-              onSelect: (index) {
-                setState(() => _episodesOpen = false);
-                _focus.requestFocus();
-                _changeEpisode(index + 1, road: _video.selectedEpisode.road);
-              },
-            ),
+          TvEpisodeList(
+            labels: _episodeLabels(),
+            selectedIndex: _video.selectedEpisode.episode - 1,
+            onSelect: (index) {
+              setState(() => _episodesOpen = false);
+              _focus.requestFocus();
+              _changeEpisode(index + 1, road: _video.selectedEpisode.road);
+            },
           ),
       ],
     );

@@ -15,11 +15,18 @@ class TvEnvironment {
     final cached = _cached;
     if (cached != null) return cached;
     if (defaultTargetPlatform != TargetPlatform.android) return _cached = false;
-    try {
-      return _cached =
-          await _channel.invokeMethod<bool>('isTelevision') ?? false;
-    } catch (_) {
-      return _cached = false;
+    while (true) {
+      try {
+        return _cached =
+            await _channel.invokeMethod<bool>('isTelevision') ?? false;
+      } on MissingPluginException {
+        // A background service (TV launchers bind the media service at boot)
+        // can start the engine before MainActivity registers the channel.
+        // Guessing "phone" here would pin the phone UI into that engine.
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      } catch (_) {
+        return _cached = false;
+      }
     }
   }
 

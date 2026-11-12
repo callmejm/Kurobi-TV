@@ -23,6 +23,7 @@ import 'package:mobx/mobx.dart';
 import 'package:kazumi/utils/device.dart';
 import 'package:kazumi/utils/media.dart';
 import 'package:kazumi/services/platform/platform_environment_service.dart';
+import 'package:kazumi/tv/tv_environment.dart';
 
 part 'player_playback_controller.g.dart';
 
@@ -390,7 +391,11 @@ abstract class _PlayerPlaybackController with Store {
           if (!isCurrentPlayer(player)) {
             return await _discardIfNotCurrent(candidate);
           }
-          if (androidSdkVersion >= 34) {
+          if (await TvEnvironment.isTV()) {
+            // TV SoCs have weak GPUs: copying decoded frames through the GPU
+            // renderer stutters, so hand MediaCodec the surface directly.
+            videoRenderer = 'mediacodec_embed';
+          } else if (androidSdkVersion >= 34) {
             videoRenderer = 'gpu-next';
           } else {
             videoRenderer = 'gpu';

@@ -43,8 +43,10 @@ final tvShellModule = createModule(
           sub
             ..route(
               '/home',
-              child: (context, state) =>
-                  TvHomePage(controller: inject<PopularController>()),
+              child: (context, state) => TvHomePage(
+                controller: inject<PopularController>(),
+                historyController: inject<HistoryController>(),
+              ),
             )
             ..route(
               '/timeline',

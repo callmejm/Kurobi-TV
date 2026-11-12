@@ -29,7 +29,6 @@ class TvApp extends StatelessWidget {
       locale: locale,
       theme: buildTvTheme(seed: _seedColor()),
       themeMode: ThemeMode.dark,
-      builder: (context, child) => TvTextScale(child: child!),
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: ModularApp.routerConfigOf(context),
     );
