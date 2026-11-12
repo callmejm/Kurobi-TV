@@ -17,9 +17,7 @@
 
 ## 屏幕录影
 
-<p align="center"><img alt="屏幕录影" src="static/screenshot-tv/home-nav.gif" width="640"></p>
-
-<p align="center"><a href="static/screenshot-tv/home-nav.mp4">观看 MP4 版本 (更清晰)</a></p>
+https://github.com/user-attachments/assets/41f03fb9-05ef-44e4-869a-760c35d71cef
 
 ## 屏幕截图
 
