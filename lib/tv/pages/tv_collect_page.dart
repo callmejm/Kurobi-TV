@@ -3,6 +3,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_type.dart';
 import 'package:kazumi/pages/collect/collect_controller.dart';
+import 'package:kazumi/tv/tv_nsfw.dart';
 import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_bangumi_card.dart';
 import 'package:kazumi/tv/widgets/tv_message.dart';
@@ -38,7 +39,10 @@ class _TvCollectPageState extends State<TvCollectPage> {
       padding: TvTokens.pagePadding,
       child: Observer(
         builder: (_) {
-          final all = widget.controller.collectibles.toList();
+          final all = tvHideNsfw(
+            widget.controller.collectibles,
+            (c) => c.bangumiItem,
+          );
           final groups = <(CollectType, List<CollectedBangumi>)>[
             for (final type in _shownTypes)
               (

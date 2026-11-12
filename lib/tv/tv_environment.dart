@@ -30,6 +30,9 @@ class TvEnvironment {
     }
   }
 
+  /// The result of [isTV], read synchronously after startup awaited it.
+  static bool get isActive => _forceTv || (_cached ?? false);
+
   /// Clears the cache; [override] pins the result without touching the channel.
   @visibleForTesting
   static void debugReset({bool? override}) => _cached = override;

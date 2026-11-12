@@ -40,5 +40,12 @@ void main() {
       expect(filter['air_weekday'], [1, 6]);
       expect(filter['nsfw'], isFalse);
     });
+
+    test('drops the nsfw filter when adult entries are shown', () {
+      final params = BangumiApi.buildBangumiSearchParams('x', nsfw: true);
+      final filter = params['filter'] as Map<String, dynamic>;
+
+      expect(filter.containsKey('nsfw'), isFalse);
+    });
   });
 }

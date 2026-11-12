@@ -483,6 +483,18 @@ class SettingsKeys {
     true,
     group: SettingGroup.interface,
   );
+  /// Adult (肉番) anime in TV lists and search; changed only with the passcode.
+  static const showNsfw = SettingKey<bool>(
+    'showNsfw',
+    false,
+    group: SettingGroup.misc,
+  );
+  /// SHA-256 of the passcode guarding [showNsfw]; empty until one is set.
+  static const nsfwPasscode = SettingKey<String>(
+    'nsfwPasscode',
+    '',
+    group: SettingGroup.misc,
+  );
   static const defaultCollectLayout = SettingKey<String>(
     'defaultCollectLayout',
     'list',
@@ -670,6 +682,8 @@ class SettingsKeys {
     proxyTestUrl,
     showRating,
     defaultCollectLayout,
+    showNsfw,
+    nsfwPasscode,
     downloadParallelEpisodes,
     downloadParallelSegments,
     downloadDanmaku,

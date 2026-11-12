@@ -5,6 +5,8 @@ import 'package:kazumi/bean/settings/settings_dropdown_tile.dart';
 import 'package:kazumi/bean/settings/settings_list.dart';
 import 'package:kazumi/modules/collect/collect_layout.dart';
 import 'package:kazumi/services/storage/storage.dart';
+import 'package:kazumi/tv/tv_environment.dart';
+import 'package:kazumi/tv/tv_nsfw.dart';
 import 'package:kazumi/utils/device.dart';
 
 class InterfaceSettingsPage extends StatefulWidget {
@@ -100,6 +102,16 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
               description: Text('关闭后隐藏概览和番剧列表中的评分信息'),
               initialValue: showRating,
             ),
+            if (TvEnvironment.isActive)
+              SettingsTile.switchTile(
+                leading: Icons.lock_rounded,
+                onToggle: (_) async {
+                  if (await tvToggleNsfw(context)) setState(() {});
+                },
+                title: const Text('显示肉番'),
+                description: const Text('开启或关闭都需要输入密码，首次使用时设置密码'),
+                initialValue: tvShowNsfw.value,
+              ),
           ]),
           if (isDesktop())
             SettingsSection(

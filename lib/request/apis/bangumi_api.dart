@@ -1,4 +1,5 @@
 import 'package:kazumi/services/logging/logger.dart';
+import 'package:kazumi/services/storage/storage.dart';
 import 'package:kazumi/request/config/api_endpoints.dart';
 import 'package:kazumi/request/clients/bangumi_client.dart';
 import 'package:kazumi/request/core/network_exception.dart';
@@ -274,6 +275,7 @@ class BangumiApi {
     SearchIntRange? rankRange,
     SearchDoubleRange? scoreRange,
     List<int> weekdays = const [],
+    bool nsfw = false,
   }) {
     final rankFilter = rankRange?.isValid == true
         ? _buildNumberFilter<int>(rankRange!.min, rankRange.max)
@@ -285,7 +287,8 @@ class BangumiApi {
       "type": [2],
       "tag": tags,
       "rank": rankFilter,
-      "nsfw": false
+      // Without the key Bangumi returns adult entries too.
+      if (!nsfw) "nsfw": false
     };
 
     if (dateRange?.isValid == true) {
@@ -325,6 +328,7 @@ class BangumiApi {
       rankRange: rankRange,
       scoreRange: scoreRange,
       weekdays: weekdays,
+      nsfw: GStorage.getSetting(SettingsKeys.showNsfw),
     );
 
     try {

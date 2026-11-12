@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/search/search_controller.dart';
+import 'package:kazumi/tv/tv_nsfw.dart';
 import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_bangumi_card.dart';
 import 'package:kazumi/tv/widgets/tv_focusable.dart';
@@ -11,9 +12,16 @@ import 'package:kazumi/tv/widgets/tv_poster_grid.dart';
 /// Search: a field that opens the system keyboard only on OK (so browsing
 /// past the tab never pops it), recent searches, and a result grid.
 class TvSearchPage extends StatefulWidget {
-  const TvSearchPage({super.key, required this.controller});
+  const TvSearchPage({
+    super.key,
+    required this.controller,
+    this.initialQuery = '',
+  });
 
   final SearchPageController controller;
+
+  /// Searched on open, e.g. `tag:异世界` from a detail page tag.
+  final String initialQuery;
 
   @override
   State<TvSearchPage> createState() => _TvSearchPageState();
@@ -42,6 +50,11 @@ class _TvSearchPageState extends State<TvSearchPage> {
     _editNode.addListener(() {
       if (!_editNode.hasFocus && _editing) _stopEditing();
     });
+    if (widget.initialQuery.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _submit(widget.initialQuery);
+      });
+    }
   }
 
   @override
@@ -194,7 +207,8 @@ class _TvSearchPageState extends State<TvSearchPage> {
           Expanded(
             child: Observer(
               builder: (_) {
-                if (_c.bangumiList.isEmpty) {
+                final results = tvHideNsfw(_c.bangumiList, (item) => item);
+                if (results.isEmpty) {
                   return Center(
                     child: Text(
                       _c.isLoading
@@ -208,7 +222,7 @@ class _TvSearchPageState extends State<TvSearchPage> {
                 }
                 return TvPosterGrid<BangumiItem>(
                   controller: _scroll,
-                  items: _c.bangumiList.toList(),
+                  items: results,
                   itemBuilder: (context, item, index) =>
                       tvBangumiCard(context, item),
                 );

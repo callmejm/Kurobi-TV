@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:kazumi/core_module.dart';
 import 'package:kazumi/pages/download/download_controller.dart';
@@ -120,6 +121,16 @@ final tvModule = createModule(
             historyController: inject<HistoryController>(),
           );
         },
+      )
+      ..route(
+        TvRoutes.tagSearch,
+        provide: (s) => s.add<SearchPageController>(SearchPageController.new),
+        child: (context, state) => Scaffold(
+          body: TvSearchPage(
+            controller: context.read<SearchPageController>(),
+            initialQuery: 'tag:${state.arguments}',
+          ),
+        ),
       )
       ..route(
         TvRoutes.info,

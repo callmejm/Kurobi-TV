@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/timeline/timeline_controller.dart';
+import 'package:kazumi/tv/tv_nsfw.dart';
 import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_bangumi_card.dart';
 import 'package:kazumi/tv/widgets/tv_focusable.dart';
@@ -86,7 +87,7 @@ class _TvTimelinePageState extends State<TvTimelinePage> {
                 child: TvPosterGrid<BangumiItem>(
                   // A new grid per day so its scroll starts at the top.
                   key: ValueKey(day),
-                  items: _c.bangumiCalendar[day].toList(),
+                  items: tvHideNsfw(_c.bangumiCalendar[day], (item) => item),
                   itemBuilder: (context, item, index) =>
                       tvBangumiCard(context, item),
                 ),

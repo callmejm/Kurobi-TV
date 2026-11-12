@@ -6,6 +6,9 @@ import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/history/history_module.dart';
 import 'package:kazumi/pages/history/history_controller.dart';
 import 'package:kazumi/pages/popular/popular_controller.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+import 'package:kazumi/tv/tv_nsfw.dart';
+import 'package:kazumi/tv/tv_routes.dart';
 import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_backdrop.dart';
 import 'package:kazumi/tv/widgets/tv_bangumi_card.dart';
@@ -72,8 +75,10 @@ class _TvHomePageState extends State<TvHomePage> {
     });
   }
 
-  List<BangumiItem> get _items =>
-      (_c.currentTag.isEmpty ? _c.trendList : _c.bangumiList).toList();
+  List<BangumiItem> get _items => tvHideNsfw(
+    _c.currentTag.isEmpty ? _c.trendList : _c.bangumiList,
+    (item) => item,
+  );
 
   /// Loads the next page when focus nears the end of the list.
   void _onIndexFocused(int index) {
@@ -125,6 +130,56 @@ class _TvHomePageState extends State<TvHomePage> {
                       ),
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Small menu for a "continue watching" card: open it or remove it.
+  void _historyMenu(History history) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: TvTokens.surfaceHigh,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tvBangumiTitle(history.bangumiItem),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TvButton(
+                    icon: Icons.info_outline_rounded,
+                    label: '查看详情',
+                    autofocus: true,
+                    onSelect: () {
+                      Navigator.of(dialogContext).pop();
+                      context.pushNamed(
+                        TvRoutes.info,
+                        arguments: history.bangumiItem,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  TvButton(
+                    icon: Icons.delete_outline_rounded,
+                    label: '删除记录',
+                    onSelect: () {
+                      Navigator.of(dialogContext).pop();
+                      widget.historyController.deleteHistory(history);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -228,8 +283,10 @@ class _TvHomePageState extends State<TvHomePage> {
         }
         final items = _items;
         if (_grid) return _gridView(items);
-        final history = widget.historyController.histories.toList()
-          ..sort((a, b) => b.lastWatchTime.compareTo(a.lastWatchTime));
+        final history = tvHideNsfw(
+          widget.historyController.histories,
+          (h) => h.bangumiItem,
+        )..sort((a, b) => b.lastWatchTime.compareTo(a.lastWatchTime));
         final featured =
             _featured ??
             (items.isNotEmpty ? items.first : null) ??
@@ -272,6 +329,7 @@ class _TvHomePageState extends State<TvHomePage> {
                                   item.bangumiItem,
                                   autofocus: index == 0,
                                   subtitle: item.lastWatchEpisodeName,
+                                  onLongPress: () => _historyMenu(item),
                                   onFocusChange: (focused) {
                                     if (focused) _feature(item.bangumiItem);
                                   },

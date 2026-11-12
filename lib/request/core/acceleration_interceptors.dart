@@ -3,6 +3,7 @@ import 'package:kazumi/request/config/api_endpoints.dart';
 import 'package:kazumi/request/core/ech_adapter.dart';
 import 'package:kazumi/services/network/bangumi_acceleration.dart';
 import 'package:kazumi/services/network/rules_mirror.dart';
+import 'package:kazumi/utils/bangumi_mirror_credentials.dart';
 
 class BangumiAccelerationInterceptor extends Interceptor {
   @override
@@ -17,6 +18,10 @@ class BangumiAccelerationInterceptor extends Interceptor {
           options.queryParameters = {};
           options.requireEch();
         case BangumiAcceleration.mirror:
+          if (!hasBangumiMirrorCredentials &&
+              isSignedMirrorRequest(options.method, uri.path)) {
+            break;
+          }
           options.path =
               ApiEndpoints.bangumiMirrorDomain +
               uri.path +

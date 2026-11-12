@@ -11,6 +11,9 @@ class TvRoutes {
   static const info = '/tv/info';
   static const video = '/tv/video';
 
+  /// Search for one tag, full screen; takes the tag name as argument.
+  static const tagSearch = '/tv/tag';
+
   /// The phone settings pages, pushed over the shell.
   static const settings = '/settings/';
 }

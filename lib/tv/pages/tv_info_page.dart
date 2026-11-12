@@ -5,6 +5,7 @@ import 'package:kazumi/modules/collect/collect_type.dart';
 import 'package:kazumi/pages/collect/collect_controller.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
+import 'package:kazumi/tv/tv_nsfw.dart';
 import 'package:kazumi/tv/tv_routes.dart';
 import 'package:kazumi/tv/tv_theme.dart';
 import 'package:kazumi/tv/widgets/tv_backdrop.dart';
@@ -12,8 +13,9 @@ import 'package:kazumi/tv/widgets/tv_bangumi_headline.dart';
 import 'package:kazumi/tv/widgets/tv_focusable.dart';
 import 'package:kazumi/tv/widgets/tv_source_picker.dart';
 
-/// Anime detail: cover, summary, "watch" (opens the source picker) and a
-/// collect button that cycles through the collect types.
+/// Anime detail: cover, summary, tags (each opens a tag search), "watch"
+/// (opens the source picker) and a collect button that cycles through the
+/// collect types.
 class TvInfoPage extends StatefulWidget {
   const TvInfoPage({
     super.key,
@@ -104,7 +106,35 @@ class _TvInfoPageState extends State<TvInfoPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TvBangumiHeadline(item: item, titleLines: 2, summaryLines: 6),
+                  TvBangumiHeadline(item: item, titleLines: 2, summaryLines: 4),
+                  const SizedBox(height: 16),
+                  // Tags, like the phone detail page; OK searches the tag.
+                  // One scrolling line, so long tag lists never push the
+                  // buttons off screen.
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    // Room for the focus scale inside the clip.
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        for (final tag in item.tags.where(
+                          (t) => tvShowNsfw.value || !isNsfwTag(t.name),
+                        )) ...[
+                          TvButton(
+                            label: '${tag.name} ${tag.count}',
+                            onSelect: () => context.pushNamed(
+                              TvRoutes.tagSearch,
+                              arguments: tag.name,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ],
+                    ),
+                  ),
                   const Spacer(),
                   Row(
                     children: [

@@ -59,6 +59,30 @@ void main() {
     expect(_hasRing(tester), isTrue);
   });
 
+  testWidgets('holding OK long-presses, a short press selects', (tester) async {
+    var selected = 0;
+    var longPressed = 0;
+    await tester.pumpWidget(
+      _host(
+        TvFocusable(
+          autofocus: true,
+          onSelect: () => selected++,
+          onLongPress: () => longPressed++,
+          child: const SizedBox(width: 100, height: 100),
+        ),
+      ),
+    );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.select);
+    expect(selected, 0, reason: 'a press with a long-press action waits');
+    await tester.sendKeyRepeatEvent(LogicalKeyboardKey.select);
+    await tester.sendKeyRepeatEvent(LogicalKeyboardKey.select);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.select);
+    expect((selected, longPressed), (0, 1));
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.select);
+    expect((selected, longPressed), (1, 1));
+  });
+
   testWidgets('a rebuilt TvFocusable shows the ring of its focused node', (
     tester,
   ) async {

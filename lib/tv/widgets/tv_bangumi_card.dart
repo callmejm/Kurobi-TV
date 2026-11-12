@@ -15,12 +15,14 @@ TvPosterCard tvBangumiCard(
   bool autofocus = false,
   String? subtitle,
   ValueChanged<bool>? onFocusChange,
+  VoidCallback? onLongPress,
 }) {
   return TvPosterCard(
     title: tvBangumiTitle(item),
     subtitle: subtitle,
     autofocus: autofocus,
     onFocusChange: onFocusChange,
+    onLongPress: onLongPress,
     cover: LayoutBuilder(
       builder: (context, constraints) => NetworkImgLayer(
         src: item.images['large'] ?? '',

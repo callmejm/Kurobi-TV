@@ -11,6 +11,7 @@ class TvPosterCard extends StatelessWidget {
     required this.title,
     required this.cover,
     required this.onSelect,
+    this.onLongPress,
     this.subtitle,
     this.autofocus = false,
     this.focusNode,
@@ -21,6 +22,7 @@ class TvPosterCard extends StatelessWidget {
   final String? subtitle;
   final Widget cover;
   final VoidCallback onSelect;
+  final VoidCallback? onLongPress;
   final bool autofocus;
   final FocusNode? focusNode;
   final ValueChanged<bool>? onFocusChange;
@@ -33,6 +35,7 @@ class TvPosterCard extends StatelessWidget {
       focusNode: focusNode,
       onFocusChange: onFocusChange,
       onSelect: onSelect,
+      onLongPress: onLongPress,
       ring: false,
       borderRadius: BorderRadius.zero,
       builder: (context, focused) => Column(

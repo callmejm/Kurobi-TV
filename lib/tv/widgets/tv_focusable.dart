@@ -4,7 +4,8 @@ import 'package:kazumi/tv/tv_theme.dart';
 
 /// D-pad focus target: scales up and draws a white ring with a soft glow while
 /// focused, and calls [onSelect] on OK / Enter / gamepad A (or a tap, for
-/// pointer testing).
+/// pointer testing). With [onLongPress], OK fires on release instead, and
+/// holding it fires [onLongPress].
 ///
 /// Pass [builder] instead of [child] when the content itself changes with
 /// focus (pills invert their fill); set [ring] false for those.
@@ -14,6 +15,7 @@ class TvFocusable extends StatefulWidget {
     this.child,
     this.builder,
     required this.onSelect,
+    this.onLongPress,
     this.autofocus = false,
     this.focusNode,
     this.onFocusChange,
@@ -25,6 +27,7 @@ class TvFocusable extends StatefulWidget {
   final Widget? child;
   final Widget Function(BuildContext context, bool focused)? builder;
   final VoidCallback onSelect;
+  final VoidCallback? onLongPress;
   final bool autofocus;
   final FocusNode? focusNode;
   final ValueChanged<bool>? onFocusChange;
@@ -61,12 +64,25 @@ class _TvFocusableState extends State<TvFocusable> {
     }
   }
 
+  /// Set while OK is held, until it is released or long-pressed.
+  bool _pressing = false;
+
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is KeyDownEvent && _selectKeys.contains(event.logicalKey)) {
+    if (!_selectKeys.contains(event.logicalKey)) return KeyEventResult.ignored;
+    final longPress = widget.onLongPress;
+    if (longPress == null) {
+      if (event is KeyDownEvent) widget.onSelect();
+    } else if (event is KeyDownEvent) {
+      _pressing = true;
+    } else if (event is KeyRepeatEvent && _pressing) {
+      // The remote repeats a held key; the first repeat is the long press.
+      _pressing = false;
+      longPress();
+    } else if (event is KeyUpEvent && _pressing) {
+      _pressing = false;
       widget.onSelect();
-      return KeyEventResult.handled;
     }
-    return KeyEventResult.ignored;
+    return KeyEventResult.handled;
   }
 
   @override
@@ -80,6 +96,7 @@ class _TvFocusableState extends State<TvFocusable> {
       onKeyEvent: _onKeyEvent,
       child: GestureDetector(
         onTap: widget.onSelect,
+        onLongPress: widget.onLongPress,
         child: AnimatedScale(
           scale: _focused ? widget.scale : 1.0,
           duration: TvTokens.focusDuration,
