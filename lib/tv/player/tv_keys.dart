@@ -7,22 +7,34 @@ enum TvPlayerAction {
   seekBack,
   seekForward,
   showControls,
-  openEpisodes,
+
+  /// Moves focus into the button bar under the progress bar.
+  focusBar,
+
+  /// Moves focus from the button bar back to D-pad scrubbing.
+  leaveBar,
   back,
   none,
 }
 
-/// Maps a remote key to a player action. While the episode list is open it
-/// owns arrows and OK, so only Back is handled here.
+/// Maps a remote key to a player action. While the episode list or the button
+/// bar has focus it owns arrows and OK, so only Back (and Up, out of the bar)
+/// is handled here.
 TvPlayerAction tvPlayerActionFor(
   LogicalKeyboardKey key, {
   required bool controlsVisible,
   required bool episodesOpen,
+  bool barFocused = false,
 }) {
   if (key == LogicalKeyboardKey.escape || key == LogicalKeyboardKey.goBack) {
     return TvPlayerAction.back;
   }
   if (episodesOpen) return TvPlayerAction.none;
+  if (barFocused) {
+    return key == LogicalKeyboardKey.arrowUp
+        ? TvPlayerAction.leaveBar
+        : TvPlayerAction.none;
+  }
   if (key == LogicalKeyboardKey.arrowLeft ||
       key == LogicalKeyboardKey.mediaRewind) {
     return TvPlayerAction.seekBack;
@@ -42,7 +54,7 @@ TvPlayerAction tvPlayerActionFor(
   if (key == LogicalKeyboardKey.arrowUp) {
     return controlsVisible ? TvPlayerAction.none : TvPlayerAction.showControls;
   }
-  if (key == LogicalKeyboardKey.arrowDown) return TvPlayerAction.openEpisodes;
+  if (key == LogicalKeyboardKey.arrowDown) return TvPlayerAction.focusBar;
   return TvPlayerAction.none;
 }
 

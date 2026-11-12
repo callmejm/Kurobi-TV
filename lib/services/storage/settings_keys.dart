@@ -483,10 +483,16 @@ class SettingsKeys {
     true,
     group: SettingGroup.interface,
   );
-  /// Adult (肉番) anime in TV lists and search; changed only with the passcode.
+  /// Adult (NSFW) anime in TV lists and search; changed only with the passcode.
   static const showNsfw = SettingKey<bool>(
     'showNsfw',
     false,
+    group: SettingGroup.misc,
+  );
+  /// Comma-separated Bangumi tags that mark an anime NSFW on TV.
+  static const nsfwTags = SettingKey<String>(
+    'nsfwTags',
+    '肉番,卖肉',
     group: SettingGroup.misc,
   );
   /// SHA-256 of the passcode guarding [showNsfw]; empty until one is set.
@@ -683,6 +689,7 @@ class SettingsKeys {
     showRating,
     defaultCollectLayout,
     showNsfw,
+    nsfwTags,
     nsfwPasscode,
     downloadParallelEpisodes,
     downloadParallelSegments,

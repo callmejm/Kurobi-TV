@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:kazumi/tv/tv_theme.dart';
 
@@ -62,8 +64,9 @@ class _TvRowState<T> extends State<TvRow<T>> {
   void _onItemFocused(int index) {
     _lastIndex = index;
     widget.onIndexFocused?.call(index);
-    // After TvFocusable's ensureVisible, so this pinning wins horizontally.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // After TvFocusable's ensureVisible but before the next frame, so this
+    // pinning wins horizontally without a frame of scrolling the other way.
+    scheduleMicrotask(() {
       if (!mounted || !_scroll.hasClients) return;
       final position = _scroll.position;
       final target = (index * widget.itemExtent).clamp(

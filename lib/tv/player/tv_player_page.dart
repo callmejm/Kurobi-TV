@@ -13,6 +13,7 @@ import 'package:kazumi/tv/player/tv_danmaku_stub.dart';
 import 'package:kazumi/tv/player/tv_keys.dart';
 import 'package:kazumi/tv/player/tv_player_overlay.dart';
 import 'package:kazumi/tv/tv_theme.dart';
+import 'package:kazumi/tv/widgets/tv_focusable.dart';
 import 'package:kazumi/tv/widgets/tv_message.dart';
 
 /// Route arguments when the viewer picked an episode before playing.
@@ -58,6 +59,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
   static const _controlsTimeout = Duration(seconds: 4);
 
   final _focus = FocusNode(debugLabel: 'TV player keys');
+  final _playButton = FocusNode(debugLabel: 'play button');
   final _scrubber = SeekScrubber();
   Timer? _tick;
   Timer? _hideControls;
@@ -65,6 +67,9 @@ class _TvPlayerPageState extends State<TvPlayerPage>
   bool _controlsVisible = false;
   bool _episodesOpen = false;
   bool _exiting = false;
+
+  /// A button of the bar under the progress bar has focus.
+  bool _barFocused = false;
 
   PlayerController get _player => widget.playerController;
   VideoPageController get _video => widget.videoPageController;
@@ -183,9 +188,39 @@ class _TvPlayerPageState extends State<TvPlayerPage>
   void _showControls() {
     _hideControls?.cancel();
     _hideControls = Timer(_controlsTimeout, () {
-      if (mounted) setState(() => _controlsVisible = false);
+      if (mounted) _closeControls();
     });
     if (!_controlsVisible) setState(() => _controlsVisible = true);
+  }
+
+  /// Hides the controls, taking focus back from the button bar first.
+  void _closeControls() {
+    if (_barFocused) _focus.requestFocus();
+    setState(() => _controlsVisible = false);
+  }
+
+  void _openEpisodes() {
+    _hideControls?.cancel();
+    _focus.requestFocus();
+    setState(() {
+      _controlsVisible = false;
+      _episodesOpen = true;
+    });
+  }
+
+  /// Plays the episode [delta] away from the playing one, within its road.
+  void _stepEpisode(int delta) {
+    final playing = _video.playbackEpisode;
+    final next = playing.episode + delta;
+    if (next < 1 || next > _video.roadList[playing.road].data.length) return;
+    _changeEpisode(next, road: playing.road);
+  }
+
+  static const _speeds = [0.75, 1.0, 1.25, 1.5, 2.0];
+
+  void _cycleSpeed() {
+    final i = _speeds.indexOf(_player.playback.playerSpeed);
+    _player.setPlaybackSpeed(_speeds[(i + 1) % _speeds.length]);
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
@@ -199,6 +234,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
       event.logicalKey,
       controlsVisible: _controlsVisible,
       episodesOpen: _episodesOpen,
+      barFocused: _barFocused,
     );
     // The error message owns arrows and OK so its retry button is reachable.
     if (_video.errorMessage != null && action != TvPlayerAction.back) {
@@ -206,6 +242,8 @@ class _TvPlayerPageState extends State<TvPlayerPage>
     }
     switch (action) {
       case TvPlayerAction.none:
+        // The bar's buttons take the key; any key keeps the controls up.
+        if (_barFocused) _showControls();
         return KeyEventResult.ignored;
       case TvPlayerAction.seekBack:
       case TvPlayerAction.seekForward:
@@ -235,12 +273,15 @@ class _TvPlayerPageState extends State<TvPlayerPage>
         }
       case TvPlayerAction.showControls:
         _showControls();
-      case TvPlayerAction.openEpisodes:
-        _hideControls?.cancel();
-        setState(() {
-          _controlsVisible = false;
-          _episodesOpen = true;
+      case TvPlayerAction.focusBar:
+        _showControls();
+        // The bar is built on the next frame when the controls were hidden.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _controlsVisible) _playButton.requestFocus();
         });
+      case TvPlayerAction.leaveBar:
+        _focus.requestFocus();
+        _showControls();
       case TvPlayerAction.back:
         if (event is KeyDownEvent) _back();
     }
@@ -262,7 +303,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
       _focus.requestFocus();
     } else if (_controlsVisible) {
       _hideControls?.cancel();
-      setState(() => _controlsVisible = false);
+      _closeControls();
     } else {
       Navigator.of(context).maybePop();
     }
@@ -275,6 +316,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
     _hideControls?.cancel();
     _seekCommit?.cancel();
     _focus.dispose();
+    _playButton.dispose();
     super.dispose();
   }
 
@@ -299,6 +341,51 @@ class _TvPlayerPageState extends State<TvPlayerPage>
           child: _exiting
               ? const SizedBox.expand()
               : Observer(builder: (_) => _body()),
+        ),
+      ),
+    );
+  }
+
+  Widget _actionBar(bool playing, double speed) {
+    const gap = SizedBox(width: 12);
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onFocusChange: (focused) => _barFocused = focused,
+      child: FocusTraversalGroup(
+        child: Row(
+          children: [
+            TvButton(
+              icon: Icons.skip_previous_rounded,
+              label: '上一集',
+              onSelect: () => _stepEpisode(-1),
+            ),
+            gap,
+            TvButton(
+              focusNode: _playButton,
+              icon: playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              label: playing ? '暂停' : '播放',
+              onSelect: _player.playOrPause,
+            ),
+            gap,
+            TvButton(
+              icon: Icons.skip_next_rounded,
+              label: '下一集',
+              onSelect: () => _stepEpisode(1),
+            ),
+            gap,
+            TvButton(
+              icon: Icons.format_list_numbered_rounded,
+              label: '选集',
+              onSelect: _openEpisodes,
+            ),
+            gap,
+            TvButton(
+              icon: Icons.speed_rounded,
+              label: '倍速 ${speed}x',
+              onSelect: _cycleSpeed,
+            ),
+          ],
         ),
       ),
     );
@@ -363,6 +450,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
                 duration: playback.duration,
                 playing: playback.playing,
                 seekTarget: _scrubber.target,
+                actions: _actionBar(playback.playing, playback.playerSpeed),
               );
             },
           ),

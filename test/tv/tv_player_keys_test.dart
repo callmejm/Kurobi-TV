@@ -6,10 +6,12 @@ TvPlayerAction _action(
   LogicalKeyboardKey key, {
   bool controlsVisible = false,
   bool episodesOpen = false,
+  bool barFocused = false,
 }) => tvPlayerActionFor(
   key,
   controlsVisible: controlsVisible,
   episodesOpen: episodesOpen,
+  barFocused: barFocused,
 );
 
 void main() {
@@ -42,8 +44,31 @@ void main() {
     );
   });
 
-  test('down opens the episode list', () {
-    expect(_action(LogicalKeyboardKey.arrowDown), TvPlayerAction.openEpisodes);
+  test('down moves into the button bar', () {
+    expect(_action(LogicalKeyboardKey.arrowDown), TvPlayerAction.focusBar);
+    expect(
+      _action(LogicalKeyboardKey.arrowDown, controlsVisible: true),
+      TvPlayerAction.focusBar,
+    );
+  });
+
+  test('in the button bar only Up and Back are handled', () {
+    expect(
+      _action(LogicalKeyboardKey.arrowUp, barFocused: true),
+      TvPlayerAction.leaveBar,
+    );
+    for (final key in [
+      LogicalKeyboardKey.arrowLeft,
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.enter,
+    ]) {
+      expect(_action(key, barFocused: true), TvPlayerAction.none);
+    }
+    expect(
+      _action(LogicalKeyboardKey.goBack, barFocused: true),
+      TvPlayerAction.back,
+    );
   });
 
   test('Escape and GoBack map to back', () {

@@ -145,6 +145,7 @@ final tvModule = createModule(
             infoController: context.read<InfoController>(),
             pluginsController: inject<PluginsController>(),
             collectController: inject<CollectController>(),
+            historyController: inject<HistoryController>(),
           );
         },
       );

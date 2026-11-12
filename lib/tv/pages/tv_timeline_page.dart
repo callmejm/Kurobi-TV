@@ -11,7 +11,7 @@ import 'package:kazumi/tv/widgets/tv_poster_grid.dart';
 
 const _weekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 
-/// Airing schedule: weekday pills (focusing one shows that day) over a grid.
+/// Airing schedule: weekday pills (OK or a tap shows that day) over a grid.
 class TvTimelinePage extends StatefulWidget {
   const TvTimelinePage({super.key, required this.controller});
 
@@ -25,11 +25,35 @@ class _TvTimelinePageState extends State<TvTimelinePage> {
   TimelineController get _c => widget.controller;
   final int _today = DateTime.now().weekday - 1;
   late int _day = _today;
+  final _pills = List.generate(
+    _weekdayLabels.length,
+    (i) => FocusNode(debugLabel: 'weekday $i'),
+  );
 
   @override
   void initState() {
     super.initState();
     if (_c.bangumiCalendar.isEmpty) _c.loadSeason(_c.selectedDate);
+  }
+
+  @override
+  void dispose() {
+    for (final node in _pills) {
+      node.dispose();
+    }
+    super.dispose();
+  }
+
+  /// Shows day [i]; on the day already shown, moves into its shows. Focus
+  /// alone does not switch days: a tap does not move focus, and arrowing
+  /// into the row would switch to whichever day is nearest.
+  void _selectDay(int i, int shown) {
+    if (i != shown) {
+      setState(() => _day = i);
+      _pills[i].requestFocus();
+    } else {
+      _pills[i].focusInDirection(TraversalDirection.down);
+    }
   }
 
   @override
@@ -66,17 +90,11 @@ class _TvTimelinePageState extends State<TvTimelinePage> {
                         Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: TvButton(
+                            focusNode: _pills[i],
                             label: i == _today ? '今天' : _weekdayLabels[i],
                             autofocus: i == day,
                             selected: i == day,
-                            onFocusChange: (focused) {
-                              if (focused && _day != i) {
-                                setState(() => _day = i);
-                              }
-                            },
-                            // OK jumps into the day's shows.
-                            onSelect: () => FocusManager.instance.primaryFocus
-                                ?.focusInDirection(TraversalDirection.down),
+                            onSelect: () => _selectDay(i, day),
                           ),
                         ),
                     ],

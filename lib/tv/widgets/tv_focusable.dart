@@ -109,24 +109,9 @@ class _TvFocusableState extends State<TvFocusable> {
                   ? Border.all(color: TvTokens.focus, width: 2.5)
                   : null,
             ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: widget.borderRadius,
-                boxShadow: _focused
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x66000000),
-                          blurRadius: 18,
-                          offset: Offset(0, 8),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: ClipRRect(
-                borderRadius: widget.borderRadius,
-                child: content,
-              ),
-            ),
+            // No drop shadow: invisible on the near-black page, yet a blur
+            // redrawn on every frame of the focus animation on weak TV GPUs.
+            child: ClipRRect(borderRadius: widget.borderRadius, child: content),
           ),
         ),
       ),

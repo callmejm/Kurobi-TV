@@ -22,8 +22,9 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
   late CollectLayout _defaultCollectLayout;
   bool _savingCollectLayout = false;
   static const _exitBehaviorTitles = ['退出 Kazumi', '最小化至托盘', '每次都询问'];
-  int _exitBehavior = GStorage.getSetting(SettingsKeys.exitBehavior)
-      .clamp(0, _exitBehaviorTitles.length - 1);
+  int _exitBehavior = GStorage.getSetting(
+    SettingsKeys.exitBehavior,
+  ).clamp(0, _exitBehaviorTitles.length - 1);
 
   static const Map<String, String> defaultPageMap = {
     '/tab/popular/': '推荐',
@@ -68,51 +69,74 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
       title: Text('界面设置'),
       body: SettingsList(
         sections: [
-          SettingsSection(title: Text('启动'), tiles: [
-            SettingsDropdownTile<String>(
-              leading: Icons.home_rounded,
-              title: const Text('启动界面设置'),
-              description: const Text('设置应用开启时的默认页面'),
-              value: defaultPage,
-              options: defaultPageMap,
-              fallbackLabel: '推荐',
-              onChanged: updateDefaultPage,
-            ),
-          ]),
-          SettingsSection(title: Text('展示信息'), tiles: [
-            SettingsDropdownTile<CollectLayout>(
-              leading: Icons.view_agenda_rounded,
-              title: const Text('追番默认布局'),
-              description: const Text('下次打开追番页时使用，页面内切换不会改变此设置'),
-              enabled: !_savingCollectLayout,
-              value: _defaultCollectLayout,
-              options: {
-                for (final layout in CollectLayout.values) layout: layout.label,
-              },
-              onChanged: _updateDefaultCollectLayout,
-            ),
-            SettingsTile.switchTile(
-              leading: Icons.star_rounded,
-              onToggle: (value) async {
-                showRating = value ?? !showRating;
-                await GStorage.putSetting(SettingsKeys.showRating, showRating);
-                setState(() {});
-              },
-              title: Text('显示评分'),
-              description: Text('关闭后隐藏概览和番剧列表中的评分信息'),
-              initialValue: showRating,
-            ),
-            if (TvEnvironment.isActive)
-              SettingsTile.switchTile(
-                leading: Icons.lock_rounded,
-                onToggle: (_) async {
-                  if (await tvToggleNsfw(context)) setState(() {});
-                },
-                title: const Text('显示肉番'),
-                description: const Text('开启或关闭都需要输入密码，首次使用时设置密码'),
-                initialValue: tvShowNsfw.value,
+          SettingsSection(
+            title: Text('启动'),
+            tiles: [
+              SettingsDropdownTile<String>(
+                leading: Icons.home_rounded,
+                title: const Text('启动界面设置'),
+                description: const Text('设置应用开启时的默认页面'),
+                value: defaultPage,
+                options: defaultPageMap,
+                fallbackLabel: '推荐',
+                onChanged: updateDefaultPage,
               ),
-          ]),
+            ],
+          ),
+          SettingsSection(
+            title: Text('展示信息'),
+            tiles: [
+              SettingsDropdownTile<CollectLayout>(
+                leading: Icons.view_agenda_rounded,
+                title: const Text('追番默认布局'),
+                description: const Text('下次打开追番页时使用，页面内切换不会改变此设置'),
+                enabled: !_savingCollectLayout,
+                value: _defaultCollectLayout,
+                options: {
+                  for (final layout in CollectLayout.values)
+                    layout: layout.label,
+                },
+                onChanged: _updateDefaultCollectLayout,
+              ),
+              SettingsTile.switchTile(
+                leading: Icons.star_rounded,
+                onToggle: (value) async {
+                  showRating = value ?? !showRating;
+                  await GStorage.putSetting(
+                    SettingsKeys.showRating,
+                    showRating,
+                  );
+                  setState(() {});
+                },
+                title: Text('显示评分'),
+                description: Text('关闭后隐藏概览和番剧列表中的评分信息'),
+                initialValue: showRating,
+              ),
+              if (TvEnvironment.isActive)
+                SettingsTile.switchTile(
+                  leading: Icons.lock_rounded,
+                  onToggle: (_) async {
+                    if (await tvToggleNsfw(context)) setState(() {});
+                  },
+                  title: const Text('显示NSFW'),
+                  description: const Text('开启或关闭都需要输入密码，首次使用时设置密码'),
+                  initialValue: tvShowNsfw.value,
+                ),
+              if (TvEnvironment.isActive)
+                SettingsTile(
+                  leading: Icons.label_rounded,
+                  title: const Text('NSFW 标签'),
+                  description: Text(
+                    tvNsfwTags.value.isEmpty
+                        ? '未设置'
+                        : tvNsfwTags.value.join('，'),
+                  ),
+                  onPressed: (_) async {
+                    if (await tvEditNsfwTags(context)) setState(() {});
+                  },
+                ),
+            ],
+          ),
           if (isDesktop())
             SettingsSection(
               title: const Text('窗口行为'),

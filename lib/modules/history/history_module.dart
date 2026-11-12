@@ -154,7 +154,13 @@ class Progress {
   @HiveField(3, defaultValue: 0)
   int updatedAtMs;
 
+  /// Length of the episode; 0 when unknown (older or synced records).
+  @HiveField(4, defaultValue: 0)
+  int durationMs;
+
   Duration get progress => Duration(milliseconds: _progressInMilli);
+
+  Duration get duration => Duration(milliseconds: durationMs);
 
   set progress(Duration d) => _progressInMilli = d.inMilliseconds;
 
@@ -163,6 +169,7 @@ class Progress {
     this.road,
     this._progressInMilli, {
     this.updatedAtMs = 0,
+    this.durationMs = 0,
   });
 
   int effectiveUpdatedAtMs(DateTime fallback) {

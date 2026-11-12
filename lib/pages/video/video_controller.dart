@@ -25,6 +25,7 @@ import 'package:kazumi/utils/media.dart';
 import 'package:kazumi/utils/async_session.dart';
 import 'package:kazumi/services/platform/display_mode_service.dart';
 import 'package:kazumi/pages/video/video_fullscreen_controller.dart';
+import 'package:kazumi/tv/tv_environment.dart';
 
 part 'video_controller.g.dart';
 
@@ -543,6 +544,11 @@ abstract class _VideoPageController with Store implements Disposable {
     PlaybackInitParams params,
     AsyncSession session,
   ) async {
+    // The TV player draws no danmaku; skip the download and its failure toast.
+    if (TvEnvironment.isActive) {
+      playerController.danmaku.finishDanmakuLoad(disableDanmaku: true);
+      return;
+    }
     final danmakuSession = _danmakuSessions.begin();
     playerController.danmaku.beginDanmakuLoad();
     try {

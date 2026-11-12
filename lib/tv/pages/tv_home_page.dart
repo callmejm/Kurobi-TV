@@ -40,7 +40,10 @@ class TvHomePage extends StatefulWidget {
 
 class _TvHomePageState extends State<TvHomePage> {
   PopularController get _c => widget.controller;
-  BangumiItem? _featured;
+
+  /// Drives only the backdrop and headline, so resting on a card does not
+  /// rebuild the rows.
+  final _featured = ValueNotifier<BangumiItem?>(null);
   Timer? _featureDelay;
   bool _grid = false;
 
@@ -59,6 +62,7 @@ class _TvHomePageState extends State<TvHomePage> {
   @override
   void dispose() {
     _featureDelay?.cancel();
+    _featured.dispose();
     _tagButton.dispose();
     _gridToggle.dispose();
     super.dispose();
@@ -69,9 +73,7 @@ class _TvHomePageState extends State<TvHomePage> {
   void _feature(BangumiItem item) {
     _featureDelay?.cancel();
     _featureDelay = Timer(const Duration(milliseconds: 300), () {
-      if (mounted && _featured?.id != item.id) {
-        setState(() => _featured = item);
-      }
+      if (mounted && _featured.value?.id != item.id) _featured.value = item;
     });
   }
 
@@ -287,15 +289,21 @@ class _TvHomePageState extends State<TvHomePage> {
           widget.historyController.histories,
           (h) => h.bangumiItem,
         )..sort((a, b) => b.lastWatchTime.compareTo(a.lastWatchTime));
-        final featured =
-            _featured ??
-            (items.isNotEmpty ? items.first : null) ??
-            trends.firstOrNull;
+        final fallback = items.firstOrNull ?? trends.firstOrNull;
+        Widget onFeatured(Widget Function(BangumiItem item) builder) =>
+            ValueListenableBuilder<BangumiItem?>(
+              valueListenable: _featured,
+              builder: (context, featured, _) {
+                final item = featured ?? fallback;
+                return item == null ? const SizedBox.shrink() : builder(item);
+              },
+            );
         return Stack(
           fit: StackFit.expand,
           children: [
-            if (featured != null)
-              TvBackdrop(imageUrl: featured.images['large'] ?? ''),
+            onFeatured(
+              (item) => TvBackdrop(imageUrl: item.images['large'] ?? ''),
+            ),
             Padding(
               padding: TvTokens.pagePadding,
               child: Column(
@@ -310,9 +318,9 @@ class _TvHomePageState extends State<TvHomePage> {
                     ),
                     child: FractionallySizedBox(
                       widthFactor: 0.55,
-                      child: featured == null
-                          ? const SizedBox.shrink()
-                          : TvBangumiHeadline(item: featured),
+                      child: onFeatured(
+                        (item) => TvBangumiHeadline(item: item),
+                      ),
                     ),
                   ),
                   Expanded(

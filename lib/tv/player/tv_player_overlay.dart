@@ -29,6 +29,7 @@ class TvPlayerControls extends StatelessWidget {
     required this.duration,
     required this.playing,
     this.seekTarget,
+    this.actions,
   });
 
   final String title;
@@ -37,6 +38,9 @@ class TvPlayerControls extends StatelessWidget {
   final Duration duration;
   final bool playing;
   final Duration? seekTarget;
+
+  /// Button bar under the time row, reached with Down.
+  final Widget? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +60,7 @@ class TvPlayerControls extends StatelessWidget {
         ),
         const Align(
           alignment: Alignment.bottomCenter,
-          child: _Scrim(height: 200, fromTop: false),
+          child: _Scrim(height: 280, fromTop: false),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(
@@ -108,11 +112,12 @@ class TvPlayerControls extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '◀ ▶ 快退 / 快进（按住加速）    OK 暂停    ▼ 选集',
+                    '◀ ▶ 快退 / 快进（按住加速）    OK 暂停    ▼ 更多操作',
                     style: text.bodyMedium!.copyWith(color: TvTokens.textMuted),
                   ),
                 ],
               ),
+              if (actions != null) ...[const SizedBox(height: 16), actions!],
             ],
           ),
         ),

@@ -12,55 +12,58 @@ class TvBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth * 0.68;
-        final height = constraints.maxHeight;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned(
-              top: 0,
-              right: 0,
-              width: width,
-              height: height,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 350),
-                child: NetworkImgLayer(
-                  key: ValueKey(imageUrl),
-                  src: imageUrl,
-                  width: width,
-                  height: height,
-                  type: 'bg',
-                  borderRadius: BorderRadius.zero,
-                  filterQuality: FilterQuality.medium,
+    // Its own layer: card focus animations then skip repainting the artwork.
+    return RepaintBoundary(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth * 0.68;
+          final height = constraints.maxHeight;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned(
+                top: 0,
+                right: 0,
+                width: width,
+                height: height,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  child: NetworkImgLayer(
+                    key: ValueKey(imageUrl),
+                    src: imageUrl,
+                    width: width,
+                    height: height,
+                    type: 'bg',
+                    borderRadius: BorderRadius.zero,
+                    filterQuality: FilterQuality.medium,
+                  ),
                 ),
               ),
-            ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  // Opaque under the headline column (about 56% wide).
-                  stops: [0.42, 0.8],
-                  colors: [TvTokens.background, Color(0x000A0A0C)],
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    // Opaque under the headline column (about 56% wide).
+                    stops: [0.42, 0.8],
+                    colors: [TvTokens.background, Color(0x000A0A0C)],
+                  ),
                 ),
               ),
-            ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  stops: [0.0, 0.45],
-                  colors: [TvTokens.background, Color(0x000A0A0C)],
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    stops: [0.0, 0.45],
+                    colors: [TvTokens.background, Color(0x000A0A0C)],
+                  ),
                 ),
               ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }
