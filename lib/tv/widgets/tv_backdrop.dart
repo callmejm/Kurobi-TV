@@ -42,7 +42,8 @@ class TvBackdrop extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
-                  stops: [0.3, 0.75],
+                  // Opaque under the headline column (about 56% wide).
+                  stops: [0.42, 0.8],
                   colors: [TvTokens.background, Color(0x000A0A0C)],
                 ),
               ),

@@ -9,6 +9,7 @@ import 'package:kazumi/pages/player/player_item_surface.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/video/video_playback_args.dart';
 import 'package:kazumi/services/storage/storage.dart';
+import 'package:kazumi/tv/player/tv_danmaku_stub.dart';
 import 'package:kazumi/tv/player/tv_keys.dart';
 import 'package:kazumi/tv/player/tv_player_overlay.dart';
 import 'package:kazumi/tv/tv_theme.dart';
@@ -55,6 +56,7 @@ class _TvPlayerPageState extends State<TvPlayerPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _player.danmaku.canvasController = tvNoDanmakuController();
     _video.applyPlaybackArgs(widget.args);
     _applyResume();
     WidgetsBinding.instance.addPostFrameCallback((_) {

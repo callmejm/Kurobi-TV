@@ -24,8 +24,8 @@ const tvDestinations = [
 /// Top navigation bar floating over full-bleed page content.
 ///
 /// D-pad: Up from the top of a page reaches the bar, Down from the bar enters
-/// the page. Back from a page focuses the active tab; Back on the bar calls
-/// [onExit] (defaults to closing the app). Pages leave [TvTokens.navHeight]
+/// the page. Back from a page focuses the active tab; Back on the bar goes to
+/// Home, and on Home calls [onExit] (defaults to closing the app). Pages leave [TvTokens.navHeight]
 /// free at the top (see [TvTokens.pagePadding]).
 class TvShell extends StatefulWidget {
   const TvShell({
@@ -60,8 +60,14 @@ class _TvShellState extends State<TvShell> {
   bool get _navFocused =>
       _navNodes.any((node) => node == FocusManager.instance.primaryFocus);
 
+  static const _homeIndex = 1;
+
   void _handleBack() {
-    if (_navFocused) {
+    if (_navFocused && _activeIndex != _homeIndex) {
+      // TV convention: Back walks back to Home before it leaves the app.
+      widget.onNavigate(tvDestinations[_homeIndex].path);
+      _navNodes[_homeIndex].requestFocus();
+    } else if (_navFocused) {
       (widget.onExit ?? SystemNavigator.pop).call();
     } else {
       _navNodes[_activeIndex].requestFocus();
@@ -80,6 +86,22 @@ class _TvShellState extends State<TvShell> {
       TraversalDirection.up,
     );
     if (moved != true) _navNodes[_activeIndex].requestFocus();
+    return KeyEventResult.handled;
+  }
+
+  /// Left/Right on the bar step one tab. Flutter's directional traversal
+  /// "reverses" to remembered nodes across scopes and could leave the bar.
+  KeyEventResult _onNavKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final step = switch (event.logicalKey) {
+      LogicalKeyboardKey.arrowLeft => -1,
+      LogicalKeyboardKey.arrowRight => 1,
+      _ => 0,
+    };
+    final index = _navNodes.indexWhere((n) => n.hasPrimaryFocus);
+    if (step == 0 || index < 0) return KeyEventResult.ignored;
+    final next = index + step;
+    if (next >= 0 && next < _navNodes.length) _navNodes[next].requestFocus();
     return KeyEventResult.handled;
   }
 
@@ -111,7 +133,10 @@ class _TvShellState extends State<TvShell> {
           ),
           child: Align(
             alignment: Alignment.topLeft,
-            child: FocusTraversalGroup(
+            child: Focus(
+              canRequestFocus: false,
+              skipTraversal: true,
+              onKeyEvent: _onNavKey,
               child: Row(
                 children: [
                   Text(

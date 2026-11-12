@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:kazumi/modules/search/plugin_search_module.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
@@ -57,8 +58,42 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
   @override
   void dispose() {
     _service.cancel();
+    _area.dispose();
     super.dispose();
   }
+
+  final FocusNode _area = FocusNode(
+    debugLabel: 'source picker',
+    skipTraversal: true,
+  );
+
+  /// Set by the first key press; until then focus follows the top tile.
+  bool _moved = false;
+
+  /// Results stream in and re-sort, so the tile that was first to appear can
+  /// end up off screen. Until the user moves, keep focus on the top-left tile;
+  /// after that only rescue focus if it was lost.
+  void _keepFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || (_moved && _area.hasFocus)) return;
+      final tiles = _area.traversalDescendants;
+      if (tiles.isEmpty) return;
+      final top = tiles.reduce((a, b) {
+        final dy = a.rect.top - b.rect.top;
+        if (dy.abs() > 1) return dy < 0 ? a : b;
+        return a.rect.left <= b.rect.left ? a : b;
+      });
+      if (!top.hasPrimaryFocus) top.requestFocus();
+    });
+  }
+
+  /// Results first, then retry tiles, then sections with nothing to select.
+  int _rank(Plugin plugin) => switch (_info.pluginSearchStatus[plugin.name]) {
+    PluginSearchStatus.success => 0,
+    PluginSearchStatus.error => 1,
+    PluginSearchStatus.pending || null => 2,
+    _ => 3,
+  };
 
   Future<void> _open(Plugin plugin, SearchItem item) async {
     if (_opening) return;
@@ -94,15 +129,9 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
   }
 
   /// One result tile: white with dark text when focused.
-  Widget _tile(
-    String text, {
-    required VoidCallback onSelect,
-    bool autofocus = false,
-  }) {
+  Widget _tile(String text, {required VoidCallback onSelect}) {
     final style = Theme.of(context).textTheme.bodyLarge!;
     return TvFocusable(
-      // Results stream in; the first tile to appear takes focus.
-      autofocus: autofocus,
       onSelect: onSelect,
       ring: false,
       scale: 1.05,
@@ -142,11 +171,8 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
           items: results,
           itemExtent: 236,
           height: 88,
-          itemBuilder: (context, item, index) => _tile(
-            item.name,
-            autofocus: index == 0,
-            onSelect: () => _open(plugin, item),
-          ),
+          itemBuilder: (context, item, index) =>
+              _tile(item.name, onSelect: () => _open(plugin, item)),
         );
       case PluginSearchStatus.captcha:
         return note('需要在手机上完成验证');
@@ -160,7 +186,6 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
           height: 88,
           itemBuilder: (context, item, index) => _tile(
             '按确认键重试',
-            autofocus: true,
             onSelect: () => _service.querySource(_keyword, plugin.name),
           ),
         );
@@ -182,7 +207,14 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
       ),
       child: Observer(
         builder: (_) {
-          final plugins = widget.pluginsController.pluginList.toList();
+          final installed = widget.pluginsController.pluginList.toList();
+          final plugins = [...installed]
+            ..sort((a, b) {
+              final byRank = _rank(a).compareTo(_rank(b));
+              return byRank != 0
+                  ? byRank
+                  : installed.indexOf(a).compareTo(installed.indexOf(b));
+            });
           if (plugins.isEmpty) {
             return TvMessage(
               text: '还没有规则',
@@ -190,31 +222,43 @@ class _TvSourcePickerState extends State<TvSourcePicker> {
               onAction: widget.onOpenRules,
             );
           }
-          return ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  TvTokens.itemInset,
-                  0,
-                  0,
-                  16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('选择播放源', style: text.headlineSmall),
-                    const SizedBox(height: 4),
-                    Text(
-                      _notice ?? '在已安装的规则中搜索「$_keyword」',
-                      style: text.bodyMedium!.copyWith(
-                        color: TvTokens.textMuted,
+          _keepFocus();
+          return Focus(
+            focusNode: _area,
+            onKeyEvent: (_, event) {
+              if (event is KeyDownEvent) _moved = true;
+              return KeyEventResult.ignored;
+            },
+            child: ListView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    TvTokens.itemInset,
+                    0,
+                    0,
+                    16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('选择播放源', style: text.headlineSmall),
+                      const SizedBox(height: 4),
+                      Text(
+                        _notice ?? '在已安装的规则中搜索「$_keyword」',
+                        style: text.bodyMedium!.copyWith(
+                          color: TvTokens.textMuted,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              for (final plugin in plugins) _section(plugin),
-            ],
+                for (final plugin in plugins)
+                  KeyedSubtree(
+                    key: ValueKey(plugin.name),
+                    child: _section(plugin),
+                  ),
+              ],
+            ),
           );
         },
       ),

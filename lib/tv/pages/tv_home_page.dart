@@ -90,7 +90,7 @@ class _TvHomePageState extends State<TvHomePage> {
                       TvTokens.itemInset,
                       12,
                       0,
-                      8,
+                      20,
                     ),
                     child: FractionallySizedBox(
                       widthFactor: 0.55,

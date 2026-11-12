@@ -141,7 +141,10 @@ class _TvRulesPageState extends State<TvRulesPage> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'v${item.version}  ·  ${item.author}',
+                                [
+                                  'v${item.version}',
+                                  if (item.author.isNotEmpty) item.author,
+                                ].join('  ·  '),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: text.bodySmall!.copyWith(
